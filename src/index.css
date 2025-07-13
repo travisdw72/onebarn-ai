@@ -1,0 +1,243 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Reset for Tailwind compatibility */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Ensure Tailwind styles take precedence */
+@layer base {
+  body {
+    @apply font-sans;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+  }
+}
+
+/* Focus styles for accessibility */
+*:focus {
+  outline: 2px solid #D4A574;
+  outline-offset: 2px;
+}
+
+/* Custom animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Ensure proper styling for the client dashboard */
+.client-dashboard {
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Basic CSS Variables */
+:root {
+  --stable-mahogany: #6B3A2C;
+  --arena-sand: #F4E8D8;
+  --midnight-black: #1A1A1A;
+  --hunter-green: #2C5530;
+  --sterling-silver: #B8B5B0;
+  --chestnut-glow: #C67B5C;
+  --champion-gold: #D4A574;
+  --ribbon-blue: #4A6FA5;
+  --victory-rose: #B85450;
+  --pasture-sage: #8B9574;
+}
+
+/* Custom CSS Variables for One Barn AI Color Palette */
+:root {
+  /* Primary Colors */
+  --stable-mahogany: #6B3A2C;
+  --arena-sand: #F4E8D8;
+  --midnight-black: #1A1A1A;
+  
+  /* Secondary Colors */
+  --hunter-green: #2C5530;
+  --sterling-silver: #B8B5B0;
+  --chestnut-glow: #C67B5C;
+  
+  /* Performance Accent Colors */
+  --champion-gold: #D4A574;
+  --ribbon-blue: #4A6FA5;
+  --victory-rose: #B85450;
+  --pasture-sage: #8B9574;
+  
+  /* Mobile-First Design Variables */
+  --touch-target-min: 48px;
+  --touch-target-gloved: 64px;
+  --touch-padding: 16px;
+  
+  /* Animation Variables */
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Tailwind Custom Classes */
+@layer utilities {
+  .stable-mahogany { color: var(--stable-mahogany); }
+  .arena-sand { color: var(--arena-sand); }
+  .midnight-black { color: var(--midnight-black); }
+  .hunter-green { color: var(--hunter-green); }
+  .sterling-silver { color: var(--sterling-silver); }
+  .chestnut-glow { color: var(--chestnut-glow); }
+  .champion-gold { color: var(--champion-gold); }
+  .ribbon-blue { color: var(--ribbon-blue); }
+  .victory-rose { color: var(--victory-rose); }
+  .pasture-sage { color: var(--pasture-sage); }
+  
+  .bg-stable-mahogany { background-color: var(--stable-mahogany); }
+  .bg-arena-sand { background-color: var(--arena-sand); }
+  .bg-midnight-black { background-color: var(--midnight-black); }
+  .bg-hunter-green { background-color: var(--hunter-green); }
+  .bg-sterling-silver { background-color: var(--sterling-silver); }
+  .bg-chestnut-glow { background-color: var(--chestnut-glow); }
+  .bg-champion-gold { background-color: var(--champion-gold); }
+  .bg-ribbon-blue { background-color: var(--ribbon-blue); }
+  .bg-victory-rose { background-color: var(--victory-rose); }
+  .bg-pasture-sage { background-color: var(--pasture-sage); }
+}
+
+/* Mobile-First Touch Targets */
+.touch-target-enhanced {
+  min-height: var(--touch-target-gloved);
+  min-width: var(--touch-target-gloved);
+  padding: var(--touch-padding);
+  position: relative;
+}
+
+.touch-target-enhanced::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  border-radius: inherit;
+}
+
+/* Outdoor Mode Support */
+@media (prefers-contrast: high) {
+  :root {
+    --stable-mahogany: #000000;
+    --arena-sand: #FFFFFF;
+    --midnight-black: #000000;
+  }
+}
+
+/* Glove-Friendly Interactions */
+@media (pointer: coarse) {
+  .touch-target-enhanced {
+    min-height: calc(var(--touch-target-gloved) + 8px);
+    min-width: calc(var(--touch-target-gloved) + 8px);
+  }
+}
+
+/* Custom Animations */
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+.pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+.gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 4s ease infinite;
+}
+
+/* High Contrast Mode */
+.outdoor-mode {
+  --stable-mahogany: #000000;
+  --arena-sand: #FFFFFF;
+  --midnight-black: #000000;
+  --hunter-green: #000000;
+  --sterling-silver: #666666;
+  --champion-gold: #000000;
+  filter: contrast(1.2);
+}
+
+.outdoor-mode .primary-text {
+  font-weight: 600;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
+}
+
+/* Advanced Shadows */
+.shadow-3xl {
+  box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--stable-mahogany), var(--champion-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--arena-sand);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--stable-mahogany);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--hunter-green);
+}
+
+/* Loading States */
+.loading-shimmer {
+  background: linear-gradient(90deg, 
+    rgba(244, 232, 216, 0.2) 25%, 
+    rgba(244, 232, 216, 0.4) 50%, 
+    rgba(244, 232, 216, 0.2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Print Styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  * {
+    color: black !important;
+    background: white !important;
+  }
+}

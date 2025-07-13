@@ -1,0 +1,36 @@
+# Add the missing important patterns from your comprehensive .gitignore
+@"
+node_modules/
+.env
+.env.*
+*.tsbuildinfo
+*.log
+dist/
+build/
+*.tmp
+*.mermaid
+debug-*.html
+docker-compose.*.yml
+*TEST*.md
+*DEMO*.md
+*CLEANUP*.md
+*MAPPING*.md
+old.*
+# Large media files
+*.mp4
+*.mov
+*.avi
+*.webm
+*.psd
+*.ai
+*.sketch
+*.fig
+*.xd
+# Specific directories
+public/images/frames/
+public/video/
+# Exceptions for small logos
+!*logo*.png
+!*icon*.png
+!*favicon*.png
+"@ | Out-File -FilePath .gitignore -Encoding UTF8

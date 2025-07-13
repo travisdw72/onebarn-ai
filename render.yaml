@@ -1,0 +1,126 @@
+services:
+  - type: web
+    name: one-barn-app
+    env: node
+    plan: starter
+    buildCommand: npm run build:production
+    startCommand: npx serve -s dist -p $PORT
+    healthCheckPath: /
+    
+    # Auto-deploy configuration
+    autoDeploy: true
+    branch: main
+    
+    # Environment variables (set these in Render dashboard)
+    envVars:
+      - key: NODE_ENV
+        value: production
+        
+      - key: VITE_PRODUCTION_MODE
+        value: "true"
+        
+      - key: VITE_DEMO_MODE
+        value: "false"
+        
+      - key: VITE_ENABLE_DEMO_FALLBACK
+        value: "true"
+        
+      # API Configuration (SET THESE IN RENDER DASHBOARD - DO NOT HARDCODE)
+      - key: VITE_AUTH_API_URL
+        sync: false  # Must be set in Render dashboard
+        
+      - key: VITE_API_BASE_URL
+        sync: false  # Must be set in Render dashboard
+        
+      # AI API Keys (SET THESE IN RENDER DASHBOARD - REQUIRED FOR DEMO/TESTING)
+      - key: VITE_OPENAI_API_KEY
+        sync: false  # Must be set in Render dashboard
+        
+      - key: VITE_ANTHROPIC_API_KEY
+        sync: false  # Must be set in Render dashboard
+        
+      - key: VITE_GROK_API_KEY
+        sync: false  # Must be set in Render dashboard
+        
+      - key: VITE_PLATFORM_API_KEY
+        sync: false  # Must be set in Render dashboard
+        
+      - key: VITE_TENANT_ID
+        sync: false  # Must be set in Render dashboard
+        
+      - key: VITE_TENANT_HK
+        sync: false  # Must be set in Render dashboard
+        
+      # Session Configuration
+      - key: VITE_SESSION_TIMEOUT
+        value: "28800000"
+        
+      - key: VITE_TOKEN_EXPIRY
+        value: "1800000"
+        
+      - key: VITE_PRODUCTION_TIMEOUT
+        value: "30000"
+        
+      # Security Configuration
+      - key: VITE_REQUIRE_TWO_FACTOR
+        value: "true"
+        
+      - key: VITE_LOG_SENSITIVE_DATA
+        value: "false"
+        
+      # Camera Configuration (SET THESE IN RENDER DASHBOARD)
+      - key: VITE_WYZE_USERNAME
+        sync: false  # Must be set in Render dashboard
+        
+      - key: VITE_WYZE_PASSWORD
+        sync: false  # Must be set in Render dashboard
+        
+    # Health check configuration
+    healthCheckPath: /
+    healthCheckInterval: 30
+    healthCheckTimeout: 10
+    
+    # Scaling configuration
+    minInstances: 1
+    maxInstances: 3
+    
+    # Build configuration
+    buildFilter:
+      paths:
+        - src/**
+        - public/**
+        - package.json
+        - package-lock.json
+        - vite.config.ts
+        - tsconfig.json
+        - index.html
+      ignoredPaths:
+        - "*.md"
+        - docs/**
+        - archive/**
+        - tools/**
+        - "*.log"
+        - node_modules/**
+        - dist/**
+        
+    # Custom headers for security
+    headers:
+      - path: /*
+        headers:
+          X-Content-Type-Options: nosniff
+          X-Frame-Options: DENY
+          X-XSS-Protection: "1; mode=block"
+          Content-Security-Policy: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.openai.com https://api.anthropic.com https://api.x.ai wss:"
+          Referrer-Policy: strict-origin-when-cross-origin
+          Permissions-Policy: "camera=(), microphone=(), geolocation=()"
+          
+    # Redirect configuration
+    redirects:
+      - source: /*
+        destination: /index.html
+        type: rewrite
+        
+    # Environment-specific configuration
+    domains:
+      - onebarn-ai.com  # Replace with your actual domain
+      - www.onebarn-ai.com  # Replace with your actual domain 
