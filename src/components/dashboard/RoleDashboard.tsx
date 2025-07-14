@@ -19,6 +19,11 @@ import { EmployeeSupportTab } from '../employee/support/EmployeeSupportTab';
 import { ManagerSupportTab } from '../manager/support/ManagerSupportTab';
 import { VeterinarianSupportTab } from '../veterinarian/support/VeterinarianSupportTab';
 import { EnhancedSupportStaffTab } from '../support/enhanced/EnhancedSupportStaffTab';
+// 🎨 MOBILE-FIRST DESIGN IMPORTS
+import { MobileDetector, IMobileCapabilities } from '../mobile/MobileDetector';
+import { OutdoorModeManager, IOutdoorModeState } from '../mobile/OutdoorModeManager';
+import { GestureManager, IGestureAction, createHorseCardGestures, createEmergencyGestures } from '../mobile/GestureManager';
+import { VoiceCommandManager, IVoiceCommand, createEquestirianVoiceCommands } from '../mobile/VoiceCommandManager';
 // 🎥 DEMO CAMERA IMPORTS
 import { DemoSetupWizard } from '../demo/DemoSetupWizard';
 import { useLocalCamera } from '../../hooks/useLocalCamera';
@@ -151,8 +156,125 @@ export const RoleDashboard: React.FC<IRoleDashboardProps> = ({ userRole: propUse
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isStreamActive, setIsStreamActive] = useState(false);
   
+  // 📱 MOBILE-FIRST DESIGN STATE
+  const [mobileCapabilities, setMobileCapabilities] = useState<IMobileCapabilities | null>(null);
+  const [outdoorModeState, setOutdoorModeState] = useState<IOutdoorModeState | null>(null);
+  const [gestureActions, setGestureActions] = useState<IGestureAction[]>([]);
+  const [voiceCommands, setVoiceCommands] = useState<IVoiceCommand[]>([]);
+  const [showBottomSheet, setShowBottomSheet] = useState(false);
+  const [activeBottomSheetContent, setActiveBottomSheetContent] = useState<string | null>(null);
+  
   // 📱 DEMO ACCOUNT VALIDATION
   const isDemoAccount = user?.email === 'demo@onebarnai.com';
+  
+  // 📱 MOBILE-FIRST FUNCTIONALITY
+  
+  // Initialize mobile capabilities
+  const handleMobileCapabilitiesChange = (capabilities: IMobileCapabilities) => {
+    setMobileCapabilities(capabilities);
+    
+    // Update gesture actions based on capabilities
+    if (capabilities.isMobile) {
+      const horseGestures = createHorseCardGestures(
+        'current-horse',
+        (horseId) => handleHorseQuickActions(horseId),
+        (horseId) => handleHorseDetails(horseId),
+        () => handleRefreshData(),
+        () => handleFullscreenMode()
+      );
+      
+      const emergencyGestures = createEmergencyGestures(
+        (type) => handleEmergencyCall(type),
+        () => handleEmergencyRecord(),
+        () => handleEmergencyAlert()
+      );
+      
+      setGestureActions([...horseGestures, ...emergencyGestures]);
+    }
+  };
+  
+  // Initialize voice commands
+  const handleVoiceCommandSetup = (capabilities: IMobileCapabilities) => {
+    if (capabilities.supportsVoice) {
+      const commands = createEquestirianVoiceCommands(
+        (screen) => handleVoiceNavigation(screen),
+        (action, horseName) => handleVoiceHorseAction(action, horseName),
+        (type) => handleVoiceEmergency(type),
+        (horseName, activity) => handleVoiceTrainingLog(horseName, activity)
+      );
+      
+      setVoiceCommands(commands);
+    }
+  };
+  
+  // Mobile gesture handlers
+  const handleHorseQuickActions = (horseId: string) => {
+    setActiveBottomSheetContent('horse-actions');
+    setShowBottomSheet(true);
+    setSelectedModule(horseId);
+  };
+  
+  const handleHorseDetails = (horseId: string) => {
+    setSelectedModule(horseId);
+    setSelectedTab('horses');
+  };
+  
+  const handleRefreshData = () => {
+    // Implement refresh functionality
+    console.log('Refreshing dashboard data...');
+  };
+  
+  const handleFullscreenMode = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      document.documentElement.requestFullscreen();
+    }
+  };
+  
+  const handleEmergencyCall = (type: string) => {
+    // Implement emergency call functionality
+    console.log(`Emergency call: ${type}`);
+    setActiveBottomSheetContent('emergency-call');
+    setShowBottomSheet(true);
+  };
+  
+  const handleEmergencyRecord = () => {
+    // Implement emergency recording
+    console.log('Starting emergency recording...');
+  };
+  
+  const handleEmergencyAlert = () => {
+    // Implement emergency alert
+    console.log('Sending emergency alert...');
+  };
+  
+  // Voice command handlers
+  const handleVoiceNavigation = (screen: string) => {
+    setSelectedTab(screen);
+    setShowBottomSheet(false);
+  };
+  
+  const handleVoiceHorseAction = (action: string, horseName: string) => {
+    console.log(`Voice command: ${action} for ${horseName}`);
+    // Implement horse-specific actions
+  };
+  
+  const handleVoiceEmergency = (type: string) => {
+    handleEmergencyCall(type);
+  };
+  
+  const handleVoiceTrainingLog = (horseName: string, activity: string) => {
+    console.log(`Logging training: ${activity} for ${horseName}`);
+    // Implement training log functionality
+  };
+  
+  // Initialize mobile capabilities on mount
+  useEffect(() => {
+    if (mobileCapabilities) {
+      handleVoiceCommandSetup(mobileCapabilities);
+    }
+  }, [mobileCapabilities]);
 
   // Add demo-specific quick actions
   const quickActions = isDemoAccount ? [
@@ -1213,14 +1335,36 @@ export const RoleDashboard: React.FC<IRoleDashboardProps> = ({ userRole: propUse
   };
 
   return (
-    <div style={styles.container}>
-      <Header 
-        dashboardTabs={availableTabs}
-        selectedTab={selectedTab}
-        onTabChange={setSelectedTab}
-      />
-      
-      <main style={styles.main}>
+    <MobileDetector onCapabilitiesChange={handleMobileCapabilitiesChange}>
+      {(capabilities) => (
+        <GestureManager 
+          capabilities={capabilities}
+          actions={gestureActions}
+          className={`role-dashboard ${capabilities.isMobile ? 'mobile' : 'desktop'} ${capabilities.gloveMode ? 'glove-mode' : ''}`}
+        >
+          <div style={styles.container}>
+            {/* 📱 MOBILE OUTDOOR MODE CONTROLS */}
+            {capabilities.isMobile && (
+              <div style={{ 
+                position: 'fixed', 
+                top: '10px', 
+                right: '10px', 
+                zIndex: 999 
+              }}>
+                <OutdoorModeManager 
+                  capabilities={capabilities}
+                  onModeChange={setOutdoorModeState}
+                />
+              </div>
+            )}
+            
+            <Header 
+              dashboardTabs={availableTabs}
+              selectedTab={selectedTab}
+              onTabChange={setSelectedTab}
+            />
+            
+            <main style={styles.main}>
         {/* 🎭 DEBUG DEMO INDICATOR */}
         {isDemoAccount && (
           <div style={{
@@ -1597,5 +1741,204 @@ export const RoleDashboard: React.FC<IRoleDashboardProps> = ({ userRole: propUse
 
       {/* 🎥 LIVE VIDEO GRID - Replaced with ScheduledAIMonitor for automated schedule */}
     </div>
-  );
-}; 
+    
+    {/* 🎤 VOICE COMMAND MANAGER - Only for mobile devices */}
+    {capabilities.isMobile && capabilities.supportsVoice && (
+      <VoiceCommandManager
+        capabilities={capabilities}
+        commands={voiceCommands}
+        context={{
+          currentScreen: selectedTab,
+          userRole: userRole,
+          selectedHorses: selectedModule ? [selectedModule] : []
+        }}
+        enableVoiceFeedback={true}
+        enableWakeWord={true}
+      />
+    )}
+    
+    {/* 📱 BOTTOM SHEET FOR MOBILE ACTIONS */}
+    {capabilities.isMobile && showBottomSheet && (
+      <div 
+        className={`bottom-sheet ${showBottomSheet ? 'open' : ''}`}
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: brandConfig.colors.barnWhite,
+          borderRadius: '16px 16px 0 0',
+          boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.1)',
+          transform: showBottomSheet ? 'translateY(0)' : 'translateY(100%)',
+          transition: 'transform 0.3s ease',
+          zIndex: 1000,
+          maxHeight: '90vh',
+          overflowY: 'auto'
+        }}
+      >
+        <div 
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            padding: '1rem',
+            cursor: 'pointer'
+          }}
+          onClick={() => setShowBottomSheet(false)}
+        >
+          <div style={{
+            width: '48px',
+            height: '4px',
+            backgroundColor: '#C0C0C0',
+            borderRadius: '2px'
+          }} />
+        </div>
+        
+        <div style={{ padding: '0 1rem 2rem' }}>
+          {activeBottomSheetContent === 'horse-actions' && (
+            <div>
+              <h3 style={{
+                color: brandConfig.colors.stableMahogany,
+                marginBottom: brandConfig.spacing.md
+              }}>
+                Horse Quick Actions
+              </h3>
+              <div style={{
+                display: 'grid',
+                gap: brandConfig.spacing.sm,
+                gridTemplateColumns: '1fr 1fr'
+              }}>
+                <button 
+                  className="touch-gloved"
+                  style={{
+                    padding: brandConfig.spacing.md,
+                    backgroundColor: brandConfig.colors.hunterGreen,
+                    color: brandConfig.colors.barnWhite,
+                    border: 'none',
+                    borderRadius: brandConfig.layout.borderRadius,
+                    fontSize: brandConfig.typography.fontSizeBase,
+                    fontWeight: brandConfig.typography.weightBold
+                  }}
+                  onClick={() => {
+                    console.log('Feed horse');
+                    setShowBottomSheet(false);
+                  }}
+                >
+                  🥕 Feed
+                </button>
+                <button 
+                  className="touch-gloved"
+                  style={{
+                    padding: brandConfig.spacing.md,
+                    backgroundColor: brandConfig.colors.stableMahogany,
+                    color: brandConfig.colors.barnWhite,
+                    border: 'none',
+                    borderRadius: brandConfig.layout.borderRadius,
+                    fontSize: brandConfig.typography.fontSizeBase,
+                    fontWeight: brandConfig.typography.weightBold
+                  }}
+                  onClick={() => {
+                    console.log('Log training');
+                    setShowBottomSheet(false);
+                  }}
+                >
+                  📝 Log Training
+                </button>
+                <button 
+                  className="touch-gloved"
+                  style={{
+                    padding: brandConfig.spacing.md,
+                    backgroundColor: brandConfig.colors.ribbonBlue,
+                    color: brandConfig.colors.barnWhite,
+                    border: 'none',
+                    borderRadius: brandConfig.layout.borderRadius,
+                    fontSize: brandConfig.typography.fontSizeBase,
+                    fontWeight: brandConfig.typography.weightBold
+                  }}
+                  onClick={() => {
+                    console.log('Health check');
+                    setShowBottomSheet(false);
+                  }}
+                >
+                  🏥 Health Check
+                </button>
+                <button 
+                  className="touch-gloved"
+                  style={{
+                    padding: brandConfig.spacing.md,
+                    backgroundColor: brandConfig.colors.championGold,
+                    color: brandConfig.colors.midnightBlack,
+                    border: 'none',
+                    borderRadius: brandConfig.layout.borderRadius,
+                    fontSize: brandConfig.typography.fontSizeBase,
+                    fontWeight: brandConfig.typography.weightBold
+                  }}
+                  onClick={() => {
+                    console.log('Take photo');
+                    setShowBottomSheet(false);
+                  }}
+                >
+                  📸 Photo
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {activeBottomSheetContent === 'emergency-call' && (
+            <div>
+              <h3 style={{
+                color: brandConfig.colors.errorRed,
+                marginBottom: brandConfig.spacing.md
+              }}>
+                Emergency Contact
+              </h3>
+              <div style={{
+                display: 'grid',
+                gap: brandConfig.spacing.sm
+              }}>
+                <button 
+                  className="touch-emergency"
+                  style={{
+                    padding: brandConfig.spacing.lg,
+                    backgroundColor: brandConfig.colors.errorRed,
+                    color: brandConfig.colors.barnWhite,
+                    border: 'none',
+                    borderRadius: brandConfig.layout.borderRadius,
+                    fontSize: brandConfig.typography.fontSizeLg,
+                    fontWeight: brandConfig.typography.weightBold
+                  }}
+                  onClick={() => {
+                    console.log('Calling veterinarian...');
+                    setShowBottomSheet(false);
+                  }}
+                >
+                  🚨 Call Veterinarian
+                </button>
+                <button 
+                  className="touch-emergency"
+                  style={{
+                    padding: brandConfig.spacing.lg,
+                    backgroundColor: brandConfig.colors.alertAmber,
+                    color: brandConfig.colors.midnightBlack,
+                    border: 'none',
+                    borderRadius: brandConfig.layout.borderRadius,
+                    fontSize: brandConfig.typography.fontSizeLg,
+                    fontWeight: brandConfig.typography.weightBold
+                  }}
+                  onClick={() => {
+                    console.log('Alerting staff...');
+                    setShowBottomSheet(false);
+                  }}
+                >
+                  📱 Alert Staff
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+            </GestureManager>
+        )}
+      </MobileDetector>
+    );
+  }; 

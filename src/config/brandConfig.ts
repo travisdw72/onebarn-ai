@@ -244,7 +244,7 @@ export const brandConfig: IBrandConfig = {
     }
   },
 
-  // Mobile Configuration
+  // Mobile Configuration - Enhanced for Mobile-First Design
   mobile: {
     enablePushNotifications: true,
     enableOfflineSync: true,
@@ -257,22 +257,74 @@ export const brandConfig: IBrandConfig = {
       minimal: '48px',      // Standard accessibility
       preferred: '56px',    // Recommended size
       glovedFriendly: '64px', // For barn work with gloves
-      extendedTapArea: '8px'  // Invisible extended area
+      extendedTapArea: '12px', // Increased invisible extended area
+      emergencyActions: '72px' // Extra large for emergency buttons
     },
     
-    // Gesture Support
+    // Gesture Support - Enhanced for One-Handed Operation
     gestures: {
       enableSwipeNavigation: true,
       enableLongPress: true,
       enableDoubleTap: true,
-      swipeThreshold: '50px'
+      swipeThreshold: '50px',
+      longPressDelay: '500ms',
+      doubleTapDelay: '300ms',
+      // Swipe actions for common tasks
+      swipeActions: {
+        leftSwipe: 'quickActions',
+        rightSwipe: 'details',
+        upSwipe: 'fullscreen',
+        downSwipe: 'refresh'
+      }
+    },
+    
+    // Voice Integration
+    voice: {
+      enabled: true,
+      alwaysListening: false,
+      wakeWord: 'Hey Barn',
+      language: 'en-US',
+      confidence: 0.8,
+      timeoutSeconds: 30
+    },
+    
+    // Haptic Feedback
+    haptics: {
+      enabled: true,
+      patterns: {
+        success: [100],
+        error: [200, 100, 200],
+        warning: [150, 50, 150],
+        emergency: [300, 200, 300, 200, 300]
+      }
+    },
+    
+    // Photo Documentation
+    photoDocumentation: {
+      enabled: true,
+      autoMetadata: true,
+      overlayGuides: true,
+      comparisonMode: true,
+      maxFileSize: '10MB',
+      quality: 0.9,
+      formats: ['jpeg', 'png', 'webp']
+    },
+    
+    // Performance Optimization
+    performance: {
+      lazyLoading: true,
+      imageOptimization: true,
+      cacheStrategy: 'stale-while-revalidate',
+      prefetchData: true,
+      offlineCapable: true
     }
   },
 
-  // Outdoor/Barn Environment Optimization
+  // Outdoor/Barn Environment Optimization - Enhanced for Mobile-First
   outdoorMode: {
-    enabled: false, // Toggle for testing
+    enabled: true, // Enable by default for mobile-first design
     autoDetect: true, // Use ambient light sensor if available
+    manualToggle: true, // Allow manual override
     
     // High Contrast Settings
     contrast: {
@@ -280,7 +332,7 @@ export const brandConfig: IBrandConfig = {
       backgroundColor: '#FFFFFF',
       textColor: '#000000',
       borderWidth: '3px',
-      fontWeightIncrease: 100
+      fontWeightIncrease: 200 // Increased for better mobile visibility
     },
     
     // Enhanced Visibility
@@ -288,7 +340,12 @@ export const brandConfig: IBrandConfig = {
       textShadow: '0 0 4px rgba(255, 255, 255, 0.8)',
       buttonShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
       minFontSize: '1.125rem',
-      simplifiedUI: true
+      simplifiedUI: true,
+      // New mobile-specific visibility enhancements
+      increasedSpacing: true,
+      removeGradients: true,
+      enhancedBorders: true,
+      largerIcons: true
     },
     
     // Ambient Light Thresholds (in lux)
@@ -297,6 +354,14 @@ export const brandConfig: IBrandConfig = {
       brightIndoor: 1000,
       outdoor: 10000,
       brightSun: 50000
+    },
+    
+    // Battery Optimization
+    battery: {
+      reducedAnimations: true,
+      lowerRefreshRate: true,
+      dimBackground: true,
+      optimizeImages: true
     }
   },
 

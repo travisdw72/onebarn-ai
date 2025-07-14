@@ -169,6 +169,7 @@ export interface IMobileConfig {
     preferred: string;
     glovedFriendly: string;
     extendedTapArea: string;
+    emergencyActions: string;
   };
   
   gestures: {
@@ -176,12 +177,58 @@ export interface IMobileConfig {
     enableLongPress: boolean;
     enableDoubleTap: boolean;
     swipeThreshold: string;
+    longPressDelay: string;
+    doubleTapDelay: string;
+    swipeActions: {
+      leftSwipe: string;
+      rightSwipe: string;
+      upSwipe: string;
+      downSwipe: string;
+    };
+  };
+  
+  voice: {
+    enabled: boolean;
+    alwaysListening: boolean;
+    wakeWord: string;
+    language: string;
+    confidence: number;
+    timeoutSeconds: number;
+  };
+  
+  haptics: {
+    enabled: boolean;
+    patterns: {
+      success: number[];
+      error: number[];
+      warning: number[];
+      emergency: number[];
+    };
+  };
+  
+  photoDocumentation: {
+    enabled: boolean;
+    autoMetadata: boolean;
+    overlayGuides: boolean;
+    comparisonMode: boolean;
+    maxFileSize: string;
+    quality: number;
+    formats: string[];
+  };
+  
+  performance: {
+    lazyLoading: boolean;
+    imageOptimization: boolean;
+    cacheStrategy: string;
+    prefetchData: boolean;
+    offlineCapable: boolean;
   };
 }
 
 export interface IOutdoorConfig {
   enabled: boolean;
   autoDetect: boolean;
+  manualToggle: boolean;
   
   contrast: {
     ratio: string;
@@ -196,6 +243,10 @@ export interface IOutdoorConfig {
     buttonShadow: string;
     minFontSize: string;
     simplifiedUI: boolean;
+    increasedSpacing: boolean;
+    removeGradients: boolean;
+    enhancedBorders: boolean;
+    largerIcons: boolean;
   };
   
   lightThresholds: {
@@ -203,6 +254,13 @@ export interface IOutdoorConfig {
     brightIndoor: number;
     outdoor: number;
     brightSun: number;
+  };
+  
+  battery: {
+    reducedAnimations: boolean;
+    lowerRefreshRate: boolean;
+    dimBackground: boolean;
+    optimizeImages: boolean;
   };
 }
 

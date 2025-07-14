@@ -379,8 +379,8 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: '32px',
-    minHeight: '32px',
+    minWidth: '48px', // Increased for better mobile touch
+    minHeight: '48px', // Increased for better mobile touch
   };
 
   const messagesStyle: React.CSSProperties = {
@@ -390,6 +390,7 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
     display: 'flex',
     flexDirection: 'column',
     gap: brandConfig.spacing.md,
+    WebkitOverflowScrolling: 'touch', // Smooth scrolling on mobile
   };
 
   const messageStyle = (isUser: boolean): React.CSSProperties => ({
@@ -453,7 +454,7 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
   return (
     <div style={containerStyle}>
       {/* Header */}
-      <div style={headerStyle}>
+      <div style={headerStyle} className="mobile-chat-header">
         <div style={titleStyle}>
           <MessageCircle style={{ width: '20px', height: '20px' }} />
           <span>AI Guardian</span>
@@ -461,6 +462,7 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
         <div style={controlsStyle}>
           <button
             style={controlButtonStyle}
+            className="touch-target"
             onClick={() => setIsAudioEnabled(!isAudioEnabled)}
             title={isAudioEnabled ? newDashboardEnhancements.aiChat.voiceEnabled : newDashboardEnhancements.aiChat.voiceDisabled}
           >
@@ -469,6 +471,7 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
           {onToggleExpand && (
             <button
               style={controlButtonStyle}
+              className="touch-target"
               onClick={onToggleExpand}
               title={isExpanded ? 'Minimize' : 'Expand'}
             >
@@ -479,7 +482,7 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
       </div>
 
       {/* Messages */}
-      <div style={messagesStyle}>
+      <div style={messagesStyle} className="mobile-chat-messages">
         {messages.map((message) => (
           <div key={message.id} style={messageStyle(message.type === 'user')}>
             <div style={messageBubbleStyle(message.type === 'user')}>
@@ -498,7 +501,7 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
       </div>
 
       {/* Input */}
-      <div style={inputContainerStyle}>
+      <div style={inputContainerStyle} className="mobile-chat-input">
         <textarea
           style={inputStyle}
           value={inputText}
@@ -509,6 +512,7 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
         />
         <button
           style={micButtonStyle}
+          className="touch-target"
           onClick={isListening ? stopListening : startListening}
           disabled={isProcessing}
           title={isListening ? newDashboardEnhancements.aiChat.stopListening : newDashboardEnhancements.aiChat.startListening}
@@ -517,6 +521,7 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
         </button>
         <button
           style={actionButtonStyle}
+          className="touch-target"
           onClick={() => handleSendMessage()}
           disabled={!inputText.trim() || isProcessing || isListening}
           title={newDashboardEnhancements.aiChat.sendMessage}

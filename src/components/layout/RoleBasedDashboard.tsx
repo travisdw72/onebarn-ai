@@ -437,30 +437,17 @@ export const RoleBasedDashboard: React.FC<RoleBasedDashboardProps> = ({ classNam
               </div>
             ) : (
               /* Default Dashboard Content - Overview Tab */
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: isChatExpanded ? '1fr 400px' : '1fr 350px',
-                gridTemplateRows: 'auto 1fr',
-                gap: brandConfig.spacing.md,
-                flex: 1,
-                padding: brandConfig.spacing.md,
-                overflow: 'hidden',
-              }}>
+              <div className={`dashboard-grid ${isChatExpanded ? 'chat-expanded' : ''}`}>
                 {/* System Status Bar */}
-                <div style={{ gridColumn: '1 / -1' }}>
+                <div className="dashboard-status-bar">
                   <SystemStatusBar 
                     systemStatus={systemStatus}
                     onlineUsers={1}
                   />
                 </div>
 
-                {/* Main Video Grid - Full height */}
-                <div style={{ 
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: '100%',
-                  overflow: 'hidden'
-                }}>
+                {/* Main Video Grid - Mobile-first responsive */}
+                <div className="dashboard-video-container">
                   <LiveVideoGrid
                     cameras={cameras}
                     selectedCamera={selectedCamera}
@@ -471,13 +458,8 @@ export const RoleBasedDashboard: React.FC<RoleBasedDashboardProps> = ({ classNam
                   />
                 </div>
 
-                {/* AI Chat Interface - Match video height */}
-                <div style={{ 
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: '100%',
-                  overflow: 'hidden'
-                }}>
+                {/* AI Chat Interface - Mobile-first responsive */}
+                <div className="dashboard-chat-container">
                   <AIChatInterface
                     horses={horses}
                     selectedCamera={selectedCamera}
@@ -572,30 +554,17 @@ export const RoleBasedDashboard: React.FC<RoleBasedDashboardProps> = ({ classNam
             </div>
           ) : (
             /* Default Dashboard Content - Overview Tab */
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isChatExpanded ? '1fr 400px' : '1fr 350px',
-              gridTemplateRows: 'auto 1fr',
-              gap: brandConfig.spacing.md,
-              flex: 1,
-              padding: brandConfig.spacing.md,
-              overflow: 'hidden',
-            }}>
+            <div className={`dashboard-grid ${isChatExpanded ? 'chat-expanded' : ''}`}>
               {/* System Status Bar */}
-              <div style={{ gridColumn: '1 / -1' }}>
+              <div className="dashboard-status-bar">
                 <SystemStatusBar 
                   systemStatus={systemStatus}
                   onlineUsers={1}
                 />
               </div>
 
-              {/* Main Video Grid - Full width */}
-              <div style={{ 
-                display: 'flex',
-                flexDirection: 'column',
-                height: '100%',
-                overflow: 'hidden'
-              }}>
+              {/* Main Video Grid - Mobile-first responsive */}
+              <div className="dashboard-video-container">
                 <LiveVideoGrid
                   cameras={cameras}
                   selectedCamera={selectedCamera}
@@ -606,13 +575,8 @@ export const RoleBasedDashboard: React.FC<RoleBasedDashboardProps> = ({ classNam
                 />
               </div>
 
-              {/* AI Chat Interface - Match video height */}
-              <div style={{ 
-                display: 'flex',
-                flexDirection: 'column',
-                height: '100%',
-                overflow: 'hidden'
-              }}>
+              {/* AI Chat Interface - Mobile-first responsive */}
+              <div className="dashboard-chat-container">
                 <AIChatInterface
                   horses={horses}
                   selectedCamera={selectedCamera}

@@ -1,3 +1,6 @@
+/* Mobile-First Design Styles */
+@import './styles/mobile-first.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

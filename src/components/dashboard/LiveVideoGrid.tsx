@@ -273,6 +273,11 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
     }
   };
 
+  // 📱 MOBILE-RESPONSIVE DETECTION
+  const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const isMobileViewport = window.innerWidth < 768;
+  const isMobile = isMobileDevice || isMobileViewport;
+
   // New AI monitoring integration
   const handleCameraConnection = useCallback(async (cameraId: string) => {
     console.log('🎬 [LiveVideoGrid] handleCameraConnection called');
@@ -283,29 +288,57 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
     try {
       console.log('🎬 [LiveVideoGrid] Starting camera connection for AI monitoring...');
       
-      // Enhanced camera connection with aspect ratio preservation
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
+      // 📱 MOBILE-SPECIFIC CAMERA CONNECTION
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      console.log('📱 [LiveVideoGrid] Mobile device detected:', isMobileDevice);
+      
+      // 🔒 HTTPS CHECK FOR MOBILE
+      const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+      if (isMobileDevice && !isSecure) {
+        throw new Error('📱 Mobile camera access requires HTTPS connection. Please use a secure connection.');
+      }
+      
+      // 🎥 MOBILE-OPTIMIZED CAMERA CONSTRAINTS
+      const constraints = {
+        video: isMobileDevice ? {
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 },
+          aspectRatio: { ideal: 16/9 },
+          facingMode: 'environment', // Use back camera on mobile
+          frameRate: { ideal: 30, max: 60 }
+        } : {
           width: { ideal: 1920 },
           height: { ideal: 1080 },
-          aspectRatio: { ideal: 16/9 }
-        }
-      });
+          aspectRatio: { ideal: 16/9 },
+          frameRate: { ideal: 30 }
+        },
+        audio: false // Disable audio for better mobile performance
+      };
+      
+      // Enhanced camera connection with mobile-specific handling
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       
       console.log('🎬 [LiveVideoGrid] Stream obtained:', stream);
       
       const videoElement = videoRefs.current[cameraId];
       if (videoElement) {
         videoElement.srcObject = stream;
-        // Ensure consistent styling for live stream
+        
+        // 📱 MOBILE-SPECIFIC VIDEO ELEMENT SETUP
         videoElement.style.objectFit = 'cover';
         videoElement.style.width = '100%';
         videoElement.style.height = '100%';
         videoElement.style.backgroundColor = brandConfig.colors.midnightBlack;
+        videoElement.playsInline = true;
+        videoElement.autoplay = true;
+        videoElement.muted = true;
         
         // 🤖 ASSIGN STREAM TO AI VIDEO REF FOR MONITORING
         if (aiVideoRef.current) {
           aiVideoRef.current.srcObject = stream;
+          aiVideoRef.current.playsInline = true;
+          aiVideoRef.current.autoplay = true;
+          aiVideoRef.current.muted = true;
         }
         
         // Mark camera as connected
@@ -324,7 +357,28 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
       }
     } catch (err) {
       console.error('❌ [LiveVideoGrid] Camera access denied:', err);
+      
+      // 📱 MOBILE-SPECIFIC ERROR HANDLING
+      let errorMessage = 'Camera access failed. ';
+      if (err instanceof Error) {
+        if (err.message.includes('Permission denied')) {
+          errorMessage += 'Please allow camera access in your browser settings.';
+        } else if (err.message.includes('NotFoundError')) {
+          errorMessage += 'No camera found. Please check your device has a camera.';
+        } else if (err.message.includes('NotReadableError')) {
+          errorMessage += 'Camera is being used by another application.';
+        } else if (err.message.includes('HTTPS')) {
+          errorMessage += err.message;
+        } else {
+          errorMessage += err.message;
+        }
+      }
+      
+      // Show error to user (you could add a toast notification here)
+      console.error('📱 [LiveVideoGrid] Mobile camera error:', errorMessage);
+      
       // Could add fallback or user guidance here
+      alert(errorMessage);
     }
   }, [userEmail]);
 
@@ -390,10 +444,10 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
 
   const cameraGridStyle: React.CSSProperties = {
     display: 'flex',
-    gap: brandConfig.spacing.lg,
-    padding: brandConfig.spacing.md,
+    gap: isMobile ? brandConfig.spacing.sm : brandConfig.spacing.lg,
+    padding: isMobile ? brandConfig.spacing.sm : brandConfig.spacing.md,
     backgroundColor: brandConfig.colors.arenaSand,
-    maxHeight: '150px',
+    maxHeight: isMobile ? '120px' : '150px',
     overflowY: 'auto',
     alignItems: 'flex-start',
     ...(fullscreen && {
@@ -404,7 +458,7 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
       zIndex: 10000,
       backgroundColor: 'rgba(0, 0, 0, 0.8)',
       backdropFilter: 'blur(8px)',
-      maxHeight: '200px',
+      maxHeight: isMobile ? '140px' : '200px',
       transform: showCameraOverlay ? 'translateY(0)' : 'translateY(100%)',
       transition: 'transform 0.3s ease-in-out',
     }),
@@ -412,47 +466,51 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
 
   const cameraScrollStyle: React.CSSProperties = {
     display: 'grid',
-    gridTemplateColumns: `repeat(auto-fill, 200px)`,
-    gap: brandConfig.spacing.lg,
+    gridTemplateColumns: isMobile ? `repeat(auto-fill, 120px)` : `repeat(auto-fill, 200px)`,
+    gap: isMobile ? brandConfig.spacing.sm : brandConfig.spacing.lg,
     justifyContent: 'start',
     flex: 1,
   };
 
+  // 📱 MOBILE-RESPONSIVE EMERGENCY PANEL STYLES
   const emergencyPanelStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    gap: brandConfig.spacing.sm,
-    padding: brandConfig.spacing.md,
+    gap: isMobile ? brandConfig.spacing.xs : brandConfig.spacing.sm,
+    padding: isMobile ? brandConfig.spacing.sm : brandConfig.spacing.md,
     backgroundColor: brandConfig.colors.barnWhite,
     borderRadius: brandConfig.layout.borderRadius,
-    minWidth: '250px',
-    maxWidth: '400px',
+    minWidth: isMobile ? '200px' : '250px',
+    maxWidth: isMobile ? '280px' : '400px',
     border: `1px solid ${brandConfig.colors.sterlingSilver}`,
+    fontSize: isMobile ? brandConfig.typography.fontSizeXs : brandConfig.typography.fontSizeSm,
   };
 
   const emergencyRowStyle: React.CSSProperties = {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: brandConfig.spacing.sm,
+    gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', // Stack vertically on mobile
+    gap: isMobile ? brandConfig.spacing.xs : brandConfig.spacing.sm,
   };
 
   const emergencyButtonStyle: React.CSSProperties = {
-    padding: `${brandConfig.spacing.sm} ${brandConfig.spacing.md}`,
+    padding: isMobile ? `${brandConfig.spacing.xs} ${brandConfig.spacing.sm}` : `${brandConfig.spacing.sm} ${brandConfig.spacing.md}`,
     backgroundColor: brandConfig.colors.errorRed,
     color: brandConfig.colors.barnWhite,
     border: 'none',
     borderRadius: brandConfig.layout.borderRadius,
-    fontSize: brandConfig.typography.fontSizeSm,
+    fontSize: isMobile ? brandConfig.typography.fontSizeXs : brandConfig.typography.fontSizeSm,
     fontFamily: brandConfig.typography.fontPrimary,
     fontWeight: brandConfig.typography.weightBold,
     cursor: 'pointer',
     transition: 'all 0.2s ease',
-    minHeight: newDashboardConfig.layout.touchTargetSize,
+    minHeight: isMobile ? '40px' : newDashboardConfig.layout.touchTargetSize,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: brandConfig.spacing.xs,
+    gap: isMobile ? '4px' : brandConfig.spacing.xs,
     width: '100%',
+    touchAction: 'manipulation',
+    WebkitTapHighlightColor: 'transparent',
   };
 
   const supportButtonStyle: React.CSSProperties = {
@@ -475,6 +533,9 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
     cursor: 'pointer',
     border: `2px solid transparent`,
     transition: 'all 0.2s ease',
+    minHeight: isMobile ? '67px' : '112px', // Maintain aspect ratio but ensure minimum size
+    touchAction: 'manipulation',
+    WebkitTapHighlightColor: 'transparent',
   };
 
   const selectedCameraTileStyle: React.CSSProperties = {
@@ -566,19 +627,40 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
                         border: `2px solid ${brandConfig.colors.championGold}`,
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
+                        minWidth: '200px',
+                        minHeight: '100px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        WebkitTapHighlightColor: 'transparent', // Remove tap highlight on mobile
+                        touchAction: 'manipulation', // Prevent zoom on double tap
                       }}
-                                      onClick={() => {
-                          console.log('🔍 [LiveVideoGrid] Connect Camera button clicked');
-                          console.log('🔍 [LiveVideoGrid] selectedCamera:', selectedCamera);
-                          console.log('🔍 [LiveVideoGrid] userEmail:', userEmail);
-                          console.log('🔍 [LiveVideoGrid] About to call handleCameraConnection');
-                          handleCameraConnection(selectedCamera);
-                }}
+                      className="touch-target-glove"
+                      onClick={() => {
+                        console.log('🔍 [LiveVideoGrid] Connect Camera button clicked');
+                        console.log('🔍 [LiveVideoGrid] selectedCamera:', selectedCamera);
+                        console.log('🔍 [LiveVideoGrid] userEmail:', userEmail);
+                        console.log('🔍 [LiveVideoGrid] About to call handleCameraConnection');
+                        handleCameraConnection(selectedCamera);
+                      }}
+                      onTouchStart={(e) => {
+                        // Mobile touch feedback
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+                        e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1.05)';
+                      }}
+                      onTouchEnd={(e) => {
+                        // Reset after touch
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                        e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1)';
+                      }}
                       onMouseOver={(e) => {
+                        // Desktop hover feedback
                         e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
                         e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1.05)';
                       }}
                       onMouseOut={(e) => {
+                        // Reset after hover
                         e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
                         e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1)';
                       }}
