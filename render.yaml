@@ -25,6 +25,12 @@ services:
       - key: VITE_ENABLE_DEMO_FALLBACK
         value: "true"
         
+      - key: VITE_AI_DEBUG
+        value: "false"
+        
+      - key: VITE_CONSOLE_LOGGING
+        value: "false"
+        
       # API Configuration (SET THESE IN RENDER DASHBOARD - DO NOT HARDCODE)
       - key: VITE_AUTH_API_URL
         sync: false  # Must be set in Render dashboard

@@ -45,13 +45,28 @@ export default defineConfig({
         },
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          ui: ['@ant-design/icons', 'antd'],
-          refine: ['@refinedev/core', '@refinedev/antd'],
+          ui: ['@ant-design/icons', 'antd', '@mui/material', '@mui/icons-material'],
+          refine: ['@refinedev/core', '@refinedev/antd', '@refinedev/mui'],
+          ai: ['@anthropic-ai/sdk', 'openai'],
+          utils: ['axios', 'date-fns', 'uuid', 'framer-motion'],
         },
       },
     },
     // Production optimizations
     minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: process.env.NODE_ENV === 'production',
+        drop_debugger: true,
+        pure_funcs: process.env.NODE_ENV === 'production' ? ['console.log', 'console.debug'] : [],
+      },
+      mangle: {
+        safari10: true,
+      },
+      format: {
+        comments: false,
+      },
+    },
     sourcemap: false,
     chunkSizeWarningLimit: 1000,
     // Exclude test images and development files from build
