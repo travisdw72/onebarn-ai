@@ -24,6 +24,8 @@ import { ITManagerDashboard } from '../../pages/ITManagerDashboard';
 import { ITSupportDashboard } from '../../pages/ITSupportDashboard';
 import { PartnerDashboard } from '../../pages/PartnerDashboard';
 
+
+
 // Import existing components
 import { ErrorBoundary } from '../common/ErrorBoundary';
 import { Header } from './Header';
@@ -70,6 +72,8 @@ export const RoleBasedDashboard: React.FC<RoleBasedDashboardProps> = ({ classNam
     uptime: '99.9%'
   });
 
+
+
   // Demo user role mapping function - matches AuthProvider demo mapping
   const getDemoRoleMapping = (email: string): string | null => {
     const demoUserMapping: Record<string, string> = {
@@ -77,7 +81,7 @@ export const RoleBasedDashboard: React.FC<RoleBasedDashboardProps> = ({ classNam
       'travis.woodward@onebarnai.com': 'it_manager', // IT Manager Dashboard
       'michelle.nash@onebarnai.com': 'it_support',   // IT Support Dashboard  
       'sarah.robertson@onebarnai.com': 'partner',    // Partner Dashboard
-      'demo@onevault.ai': 'client',                 // Client Dashboard
+      'demo@onebarnai.com': 'client',                 // Client Dashboard
     };
     
     return demoUserMapping[email?.toLowerCase()] || null;
@@ -89,12 +93,6 @@ export const RoleBasedDashboard: React.FC<RoleBasedDashboardProps> = ({ classNam
     if (email) {
       const demoRole = getDemoRoleMapping(email);
       if (demoRole) {
-        console.log(`🎯 Demo Dashboard Role Override:`, {
-          email: email,
-          originalDatabaseRole: role,
-          overriddenDashboardRole: demoRole,
-          timestamp: new Date().toISOString()
-        });
         return demoRole;
       }
     }
@@ -142,6 +140,11 @@ export const RoleBasedDashboard: React.FC<RoleBasedDashboardProps> = ({ classNam
     // Default fallback
     return 'client';
   };
+
+  // 📱 DEMO ACCOUNT VALIDATION - After normalizeOneVaultRole is declared
+  const isDemoAccount = user?.email === 'demo@onebarnai.com';
+
+
 
   // Dashboard tabs configuration based on role
   const getDashboardTabs = (role: string) => {
@@ -385,6 +388,8 @@ export const RoleBasedDashboard: React.FC<RoleBasedDashboardProps> = ({ classNam
             onTabChange={setActiveTab}
           />
           
+
+          
           {/* Main Content Area - Flex grow to fill space */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             {/* Render content based on selected tab */}
@@ -446,6 +451,7 @@ export const RoleBasedDashboard: React.FC<RoleBasedDashboardProps> = ({ classNam
                     onCameraSelect={setSelectedCamera}
                     alerts={alerts}
                     onEmergencyContact={handleEmergencyContact}
+                    userEmail={user?.email}
                   />
                 </div>
 
@@ -580,6 +586,7 @@ export const RoleBasedDashboard: React.FC<RoleBasedDashboardProps> = ({ classNam
                   onCameraSelect={setSelectedCamera}
                   alerts={alerts}
                   onEmergencyContact={handleEmergencyContact}
+                  userEmail={user?.email}
                 />
               </div>
 

@@ -82,6 +82,19 @@ export interface IClientDashboardData {
     currentPlan: string;
     availablePlans: ISubscriptionPlan[];
   };
+  demoCamera?: {
+    interface: {
+      title: string;
+      subtitle: string;
+      description: string;
+      setupWizard: any;
+      controls: any;
+      status: any;
+      errors: any;
+    };
+    settings: any;
+    troubleshooting: any;
+  };
 }
 
 export interface IClientUser {

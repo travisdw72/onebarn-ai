@@ -318,5 +318,153 @@ export const clientDashboardData: IClientDashboardData = {
         quality: '4K'
       }
     ]
+  },
+  
+  // 🎥 DEMO CAMERA CONFIGURATION
+  // Camera-specific content for demo@onevault.ai account
+  demoCamera: {
+    // 📝 CAMERA INTERFACE TEXT
+    interface: {
+      title: 'Live Camera Demo',
+      subtitle: 'Real-time video monitoring with AI analysis',
+      description: 'Experience professional-grade video monitoring with intelligent analysis capabilities.',
+      
+      // Setup wizard content
+      setupWizard: {
+        title: 'Camera Setup Wizard',
+        subtitle: 'Configure your camera for the demonstration',
+        welcomeMessage: 'Welcome to the One Barn AI camera demo setup. This wizard will guide you through configuring your camera for optimal demonstration experience.',
+        
+        // Step descriptions
+        steps: {
+          permissions: 'Grant camera permissions',
+          deviceSelection: 'Select camera device',
+          testing: 'Test camera quality',
+          complete: 'Setup complete'
+        },
+        
+        // Instructions for business partners
+        businessPartnerInstructions: [
+          'Ensure you have a working camera (webcam or external)',
+          'Use a modern browser (Chrome recommended)',
+          'Ensure good lighting for optimal video quality',
+          'Position camera for clear view of subject'
+        ]
+      },
+      
+      // Camera controls
+      controls: {
+        startCamera: 'Start Camera',
+        stopCamera: 'Stop Camera',
+        switchCamera: 'Switch Camera',
+        toggleFullscreen: 'Toggle Fullscreen',
+        toggleAudio: 'Toggle Audio',
+        deviceSettings: 'Device Settings',
+        troubleshooting: 'Troubleshooting Help'
+      },
+      
+      // Status messages
+      status: {
+        initializing: 'Initializing camera system...',
+        requestingPermissions: 'Requesting camera permissions...',
+        deviceDetection: 'Detecting camera devices...',
+        starting: 'Starting camera feed...',
+        active: 'Camera Active',
+        stopped: 'Camera Stopped',
+        error: 'Camera Error',
+        noPermission: 'Camera Permission Required',
+        noDevice: 'No Camera Device Found',
+        connecting: 'Connecting to camera...',
+        ready: 'Camera Ready for Demo'
+      },
+      
+      // Error messages
+      errors: {
+        permissionDenied: 'Camera permission was denied. Please refresh the page and allow camera access.',
+        noCamera: 'No camera device found. Please ensure a camera is connected.',
+        streamFailed: 'Failed to start camera stream. Please try again.',
+        deviceSwitch: 'Failed to switch camera device. Please try again.',
+        httpsRequired: 'Camera access requires HTTPS. Please use a secure connection.',
+        browserUnsupported: 'Your browser does not support camera access. Please use Chrome, Firefox, Safari, or Edge.'
+      }
+    },
+    
+    // 🎯 DEMO SPECIFIC SETTINGS
+    settings: {
+      // Only enable for demo account
+      enableForDemoAccount: true,
+      demoAccountEmail: 'demo@onevault.ai',
+      
+      // Camera quality settings
+      videoQuality: {
+        width: 1280,
+        height: 720,
+        frameRate: 30,
+        aspectRatio: '16:9'
+      },
+      
+      // UI display settings
+      showSetupWizard: true,
+      showDeviceSelector: true,
+      showTroubleshooting: true,
+      showQualityIndicator: true,
+      showCameraControls: true,
+      
+      // Auto-start settings
+      autoRequestPermissions: false,
+      autoStartCamera: false,
+      autoSelectDefaultDevice: true
+    },
+    
+    // 🔧 TROUBLESHOOTING CONTENT
+    troubleshooting: {
+      title: 'Camera Troubleshooting',
+      subtitle: 'Common issues and solutions',
+      
+      // Common problems
+      commonProblems: [
+        {
+          title: 'Permission Denied',
+          description: 'Camera access was blocked by browser',
+          solution: 'Refresh the page and click "Allow" when prompted for camera access',
+          businessPartnerNote: 'Most common issue - simply refresh and allow permissions'
+        },
+        {
+          title: 'No Camera Found',
+          description: 'No camera devices detected',
+          solution: 'Ensure camera is connected and working, check device manager',
+          businessPartnerNote: 'Built-in webcams should work automatically'
+        },
+        {
+          title: 'Poor Video Quality',
+          description: 'Video is blurry or dark',
+          solution: 'Improve lighting, clean camera lens, check camera position',
+          businessPartnerNote: 'Good lighting is essential for professional demo'
+        },
+        {
+          title: 'HTTPS Required',
+          description: 'Camera requires secure connection',
+          solution: 'Use HTTPS instead of HTTP, or use localhost for testing',
+          businessPartnerNote: 'Modern browsers require HTTPS for camera access'
+        }
+      ],
+      
+      // Support information
+      support: {
+        title: 'Need Additional Help?',
+        description: 'If you continue to have issues, here are additional resources:',
+        resources: [
+          'Supported browsers: Chrome, Firefox, Safari, Edge',
+          'Camera requirements: Any webcam or built-in camera',
+          'Network requirements: HTTPS or localhost',
+          'Recommended: Good lighting and stable internet connection'
+        ],
+        contactInfo: {
+          email: 'support@onevault.ai',
+          hours: 'Monday-Friday, 9 AM - 5 PM EST',
+          response: 'We typically respond within 4 hours during business hours'
+        }
+      }
+    }
   }
 }; 

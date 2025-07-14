@@ -339,6 +339,17 @@ export const dashboardConfig = {
       route: 'client/cameras',
       isAIEnabled: true
     },
+    'demo-camera': {
+      id: 'demo-camera',
+      title: 'Live Camera Demo',
+      description: 'Experience real-time camera monitoring with AI analysis for business demonstrations',
+      icon: '🎥',
+      color: brandConfig.colors.championGold,
+      features: ['Browser Camera Access', 'Real-time AI Analysis', 'Professional Demo Interface', 'Device Selection'],
+      requiredPermissions: ['cameras:show'],
+      route: 'client/demo-camera',
+      isAIEnabled: true
+    },
     'health-reports': {
       id: 'health-reports',
       title: 'Health Reports',

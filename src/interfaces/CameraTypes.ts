@@ -1,304 +1,210 @@
-// Camera-specific TypeScript interfaces for horse monitoring system
+/**
+ * 💼 BUSINESS PARTNER GUIDE - CAMERA TYPES
+ * 
+ * This file defines all camera-related types for the One Barn AI demo system.
+ * These types enable local WebRTC camera access for business partner demonstrations.
+ * 
+ * DEMO ACCOUNT USAGE:
+ * - Only active for demo@onevault.ai account
+ * - Extends existing camera system without breaking changes
+ * - Supports multiple camera devices (webcam, phone, etc.)
+ * 
+ * BUSINESS PARTNER SETUP:
+ * 1. Browser will request camera permissions
+ * 2. Multiple camera devices can be detected and selected
+ * 3. Real-time camera streams replace mock feeds
+ * 4. Professional demo-quality video output
+ */
 
-export interface ICameraFeedProps {
-  onFrameCapture?: (imageData: string) => void;
-  onAIAnalysis?: (analysisData: IAnalysisResult) => void;
-  selectedHorse?: string;
-  autoAnalysis?: boolean;
-  monitoringMode?: 'realtime' | 'standard' | 'efficient';
+import { ICameraFeed } from './ClientTypes';
+
+// 🎥 DEMO CAMERA DEVICE - Real browser camera device
+export interface IDemoCameraDevice {
+  deviceId: string;
+  label: string;
+  kind: 'videoinput' | 'audioinput';
+  groupId: string;
+  isDefault: boolean;
+  isAvailable: boolean;
+  capabilities?: {
+    width: { min: number; max: number };
+    height: { min: number; max: number };
+    frameRate: { min: number; max: number };
+    aspectRatio: { min: number; max: number };
+  };
 }
 
-export interface IAnalysisResult {
-  timestamp: string;
-  horseDetected: boolean;
-  confidence: number;
-  healthRisk: number;
-  behaviorScore: number;
-  activityLevel: number;
-  alerts: string[];
-  insights: string[];
-  recommendations: string[];
-  alertLevel: 'low' | 'medium' | 'high' | 'urgent';
+// 📱 CAMERA STREAM - Active WebRTC media stream
+export interface ICameraStream {
+  id: string;
+  deviceId: string;
+  stream: MediaStream | null;
+  isActive: boolean;
+  isRecording: boolean;
+  quality: {
+    width: number;
+    height: number;
+    frameRate: number;
+  };
+  lastUpdated: Date;
+  error?: string;
+}
+
+// 🎯 DEMO CAMERA FEED - Enhanced camera feed for demo account
+export interface IDemoCameraFeed extends ICameraFeed {
+  // Demo-specific properties
+  isDemoCamera: boolean;
+  demoDeviceId?: string;
+  demoStream?: MediaStream;
+  demoPermissionStatus: 'granted' | 'denied' | 'prompt' | 'checking';
   
-  // Enhanced analysis data
-  metadata?: IAnalysisMetadata;
-  clinicalAssessment?: IClinicalAssessment;
-  healthMetrics?: IHealthMetrics;
-  riskAssessment?: IRiskAssessment;
-}
-
-export interface IAnalysisMetadata {
-  captureTimestamp: string;
-  motionDetected: boolean;
-  monitoringMode: string;
-  analysisSequence: number;
-  environmentalFactors?: {
-    lightingCondition: string;
-    timeOfDay: string;
-    analysisContext: string;
+  // Business partner features
+  setupStatus: 'not-configured' | 'configuring' | 'ready' | 'error';
+  troubleshootingInfo?: {
+    lastError?: string;
+    permissionDeniedCount: number;
+    deviceDetectionFailed: boolean;
+    streamStartFailed: boolean;
   };
-  queueStatus?: {
-    queueSize: number;
-    isProcessing: boolean;
-    isAnalyzing: boolean;
-    consecutiveAnalyses: number;
-    successRate: number;
-    dynamicInterval: number;
-  };
-  errorOccurred?: boolean;
-  errorMessage?: string;
 }
 
-export interface IClinicalAssessment {
-  posturalAnalysis: string;
-  mobilityAssessment: string;
-  respiratoryObservation: string;
-  behavioralState: string;
-  alertnessLevel: string;
-  painIndicators: string[];
-  discomfortSigns: string[];
-  gaitAnalysis?: string;
-  lamenessIndicators?: string[];
-}
-
-export interface IHealthMetrics {
-  overallHealthScore: number;
-  mobilityScore: number;
-  behavioralScore: number;
-  respiratoryScore: number;
-  postureScore: number;
-  alertnessScore: number;
-  gaitScore?: number;
-}
-
-export interface IRiskAssessment {
-  overallRiskLevel: string;
-  riskScore: number;
-  immediateRisks: string[];
-  monitoringNeeded: string[];
-  concerningObservations: string[];
-}
-
-export interface ICameraSettings {
-  resolution: {
+// ⚙️ CAMERA CONFIGURATION - Demo camera setup configuration
+export interface IDemoCameraConfig {
+  // 💼 BUSINESS PARTNER SETTINGS
+  enableDemoMode: boolean;
+  demoAccountEmail: string;
+  
+  // 📹 CAMERA SETTINGS
+  preferredResolution: {
     width: number;
     height: number;
   };
-  facingMode: 'user' | 'environment';
-  frameRate?: number;
-  deviceId?: string;
+  preferredFrameRate: number;
+  enableAudio: boolean;
+  enableAutoSwitch: boolean;
+  
+  // 🔧 TROUBLESHOOTING SETTINGS
+  maxRetryAttempts: number;
+  retryDelay: number;
+  enableDiagnostics: boolean;
+  logLevel: 'error' | 'warn' | 'info' | 'debug';
+  
+  // 🎨 UI SETTINGS
+  showSetupWizard: boolean;
+  showTroubleshooting: boolean;
+  showPermissionHelp: boolean;
+  showDeviceSelection: boolean;
 }
 
-export interface IMotionDetectionSettings {
-  enabled: boolean;
-  sensitivity: number; // 0-1 scale
-  threshold: number;
-  minPixelChange: number;
-  motionAreas?: IMotionArea[];
+// 📊 CAMERA SETUP STATUS - Setup wizard state management
+export interface ICameraSetupStatus {
+  currentStep: 'permissions' | 'device-selection' | 'testing' | 'complete';
+  permissionStatus: 'checking' | 'granted' | 'denied' | 'error';
+  availableDevices: IDemoCameraDevice[];
+  selectedDevice: IDemoCameraDevice | null;
+  testStream: MediaStream | null;
+  errors: string[];
+  warnings: string[];
+  isComplete: boolean;
 }
 
-export interface IMotionArea {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  label: string;
-  sensitivity?: number;
-}
-
+// 🚨 CAMERA ERROR TYPES - Comprehensive error handling
 export interface ICameraError {
-  type: 'permission' | 'hardware' | 'network' | 'config' | 'unknown';
+  code: string;
   message: string;
-  code?: string;
-  timestamp: string;
+  severity: 'low' | 'medium' | 'high';
+  category: 'permission' | 'device' | 'stream' | 'network' | 'browser';
+  resolution?: string;
+  businessPartnerMessage?: string;
+  technicalDetails?: string;
 }
 
-export interface IFocusArea {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  label: string;
-  confidence?: number;
-  type?: 'horse' | 'human' | 'equipment' | 'hazard';
+// 🎭 CAMERA PERMISSIONS - Browser permission management
+export interface ICameraPermissions {
+  camera: PermissionState;
+  microphone: PermissionState;
+  lastChecked: Date;
+  canRequest: boolean;
+  userGestureRequired: boolean;
+  browserSupported: boolean;
+  httpsRequired: boolean;
 }
 
-export interface ICameraState {
-  isStreaming: boolean;
-  isAnalyzing: boolean;
-  hasError: boolean;
-  error: ICameraError | null;
-  stream: MediaStream | null;
-  deviceInfo?: {
-    deviceId: string;
-    label: string;
-    capabilities: MediaTrackCapabilities;
+// 🏗️ CAMERA SERVICE STATE - Service state management
+export interface ICameraServiceState {
+  isInitialized: boolean;
+  availableDevices: IDemoCameraDevice[];
+  activeStreams: Map<string, ICameraStream>;
+  permissions: ICameraPermissions;
+  errors: ICameraError[];
+  isLoading: boolean;
+  isDemoMode: boolean;
+}
+
+// 🎯 CAMERA HOOK PROPS - React hook interface
+export interface IUseCameraProps {
+  enableAudio?: boolean;
+  autoStart?: boolean;
+  isDemoAccount?: boolean;
+  useRefineIdentity?: boolean;
+  onPermissionChange?: (permissions: ICameraPermissions) => void;
+  onDeviceChange?: (devices: IDemoCameraDevice[]) => void;
+  onStreamChange?: (streams: ICameraStream[]) => void;
+  onError?: (error: ICameraError) => void;
+}
+
+// 📱 CAMERA HOOK RETURN - React hook return type
+export interface IUseCameraReturn {
+  // State
+  devices: IDemoCameraDevice[];
+  streams: ICameraStream[];
+  permissions: ICameraPermissions;
+  isLoading: boolean;
+  errors: ICameraError[];
+  
+  // Actions
+  requestPermissions: () => Promise<boolean>;
+  startCamera: (deviceId: string) => Promise<ICameraStream | null>;
+  stopCamera: (streamId: string) => Promise<void>;
+  switchCamera: (deviceId: string) => Promise<ICameraStream | null>;
+  refreshDevices: () => Promise<void>;
+  clearErrors: () => void;
+  
+  // Utilities
+  getDeviceById: (deviceId: string) => IDemoCameraDevice | null;
+  getStreamById: (streamId: string) => ICameraStream | null;
+  isDeviceAvailable: (deviceId: string) => boolean;
+  getDefaultDevice: () => IDemoCameraDevice | null;
+}
+
+// 🎪 DEMO SETUP WIZARD PROPS - Setup wizard component props
+export interface IDemoSetupWizardProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onComplete: (config: IDemoCameraConfig) => void;
+  initialConfig?: Partial<IDemoCameraConfig>;
+}
+
+// 🔧 CAMERA TROUBLESHOOTING - Troubleshooting panel props
+export interface ICameraTroubleshootingProps {
+  errors: ICameraError[];
+  onRetry: () => void;
+  onReset: () => void;
+  onContactSupport: () => void;
+  showDetails?: boolean;
+}
+
+// 📈 CAMERA ANALYTICS - Performance and usage analytics
+export interface ICameraAnalytics {
+  sessionStart: Date;
+  totalStreamTime: number;
+  deviceSwitches: number;
+  errorCount: number;
+  permissionDenials: number;
+  averageSetupTime: number;
+  browserInfo: {
+    userAgent: string;
+    platform: string;
+    language: string;
   };
-}
-
-export interface IAnalysisHistory {
-  analyses: IAnalysisResult[];
-  totalCount: number;
-  averageConfidence: number;
-  lastAnalysis?: IAnalysisResult;
-  trends: {
-    riskTrend: 'improving' | 'stable' | 'declining' | 'unknown';
-    healthTrend: 'improving' | 'stable' | 'declining' | 'unknown';
-    activityTrend: 'increasing' | 'stable' | 'decreasing' | 'unknown';
-  };
-}
-
-export interface IMonitoringSession {
-  sessionId: string;
-  startTime: string;
-  endTime?: string;
-  horseId?: string;
-  horseName?: string;
-  totalAnalyses: number;
-  averageRiskScore: number;
-  alertsGenerated: number;
-  monitoringMode: 'realtime' | 'standard' | 'efficient';
-  sessionNotes?: string;
-}
-
-export interface ICameraControlsProps {
-  isStreaming: boolean;
-  isAnalyzing: boolean;
-  autoAnalysis: boolean;
-  monitoringMode: 'realtime' | 'standard' | 'efficient';
-  selectedHorse: string;
-  onStartCamera: () => void;
-  onStopCamera: () => void;
-  onCaptureAnalyze: () => void;
-  onAutoAnalysisChange: (enabled: boolean) => void;
-  onMonitoringModeChange: (mode: 'realtime' | 'standard' | 'efficient') => void;
-  onHorseSelectionChange: (horseId: string) => void;
-  nextAnalysisCountdown?: number;
-}
-
-export interface IAnalysisDisplayProps {
-  analysis: IAnalysisResult | null;
-  isAnalyzing: boolean;
-  showDetailed?: boolean;
-  onShowDetails?: (analysis: IAnalysisResult) => void;
-}
-
-export interface IMotionDetectionResult {
-  motionDetected: boolean;
-  motionIntensity: number; // 0-1 scale
-  motionAreas: IMotionArea[];
-  timestamp: string;
-  frameComparison?: {
-    pixelDifference: number;
-    significantChanges: number;
-  };
-}
-
-export interface IAICommentaryItem {
-  timestamp: string;
-  message: string;
-  type: 'info' | 'warning' | 'alert' | 'success';
-  analysis?: IAnalysisResult;
-  metadata?: {
-    motionDetected: boolean;
-    confidence: number;
-    riskLevel: string;
-  };
-}
-
-export interface ICameraConfiguration {
-  cameras: {
-    [key: string]: {
-      name: string;
-      location: string;
-      features: string[];
-      monitoringZones: string[];
-      defaultSettings: ICameraSettings;
-    };
-  };
-  defaultMonitoringMode: 'realtime' | 'standard' | 'efficient';
-  analysisIntervals: {
-    realtime: number;
-    standard: number;
-    efficient: number;
-  };
-  motionDetection: IMotionDetectionSettings;
-  aiAnalysis: {
-    confidenceThreshold: number;
-    maxRetries: number;
-    queueSize: number;
-    rateLimiting: {
-      maxRequestsPerMinute: number;
-      adaptiveIntervals: boolean;
-    };
-  };
-}
-
-// Utility type guards
-export const isAnalysisResult = (obj: any): obj is IAnalysisResult => {
-  return obj && 
-         typeof obj.timestamp === 'string' &&
-         typeof obj.horseDetected === 'boolean' &&
-         typeof obj.confidence === 'number' &&
-         Array.isArray(obj.alerts) &&
-         Array.isArray(obj.insights);
-};
-
-export const isCameraError = (obj: any): obj is ICameraError => {
-  return obj && 
-         typeof obj.type === 'string' &&
-         typeof obj.message === 'string' &&
-         typeof obj.timestamp === 'string';
-};
-
-export const isMotionDetectionResult = (obj: any): obj is IMotionDetectionResult => {
-  return obj && 
-         typeof obj.motionDetected === 'boolean' &&
-         typeof obj.motionIntensity === 'number' &&
-         typeof obj.timestamp === 'string';
-};
-
-// Default configurations
-export const defaultCameraSettings: ICameraSettings = {
-  resolution: {
-    width: 1280,
-    height: 720
-  },
-  facingMode: 'environment',
-  frameRate: 30
-};
-
-export const defaultMotionDetectionSettings: IMotionDetectionSettings = {
-  enabled: true,
-  sensitivity: 0.3,
-  threshold: 50,
-  minPixelChange: 0.01 // 1% of pixels must change
-};
-
-export const defaultCameraConfiguration: ICameraConfiguration = {
-  cameras: {
-    stall: {
-      name: 'Stall Camera',
-      location: 'individual_stall',
-      features: ['motion_detection', 'night_vision'],
-      monitoringZones: ['feeding_area', 'water_area', 'resting_area'],
-      defaultSettings: defaultCameraSettings
-    }
-  },
-  defaultMonitoringMode: 'standard',
-  analysisIntervals: {
-    realtime: 15000,  // 15 seconds
-    standard: 30000,  // 30 seconds
-    efficient: 60000  // 60 seconds
-  },
-  motionDetection: defaultMotionDetectionSettings,
-  aiAnalysis: {
-    confidenceThreshold: 0.7,
-    maxRetries: 2,
-    queueSize: 5,
-    rateLimiting: {
-      maxRequestsPerMinute: 30,
-      adaptiveIntervals: true
-    }
-  }
-}; 
+} 

@@ -92,7 +92,7 @@ export const ROLE_PERMISSIONS: Record<string, IRoleDefinition> = {
         ]
       }
     ],
-    dashboardModules: ['my-horses', 'live-cameras', 'health-reports', 'billing', 'client-support', 'messages'],
+    dashboardModules: ['my-horses', 'live-cameras', 'demo-camera', 'health-reports', 'billing', 'client-support', 'messages'],
     quickActions: ['view-cameras', 'health-report', 'send-message', 'view-billing'],
     restrictions: {
       canViewFinancials: false,

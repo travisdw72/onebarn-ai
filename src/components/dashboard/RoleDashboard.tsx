@@ -19,6 +19,20 @@ import { EmployeeSupportTab } from '../employee/support/EmployeeSupportTab';
 import { ManagerSupportTab } from '../manager/support/ManagerSupportTab';
 import { VeterinarianSupportTab } from '../veterinarian/support/VeterinarianSupportTab';
 import { EnhancedSupportStaffTab } from '../support/enhanced/EnhancedSupportStaffTab';
+// 🎥 DEMO CAMERA IMPORTS
+import { DemoSetupWizard } from '../demo/DemoSetupWizard';
+import { useLocalCamera } from '../../hooks/useLocalCamera';
+import { LiveVideoGrid } from './LiveVideoGrid';
+import { demoCameraConfig } from '../../config/demoCameraConfig';
+import { clientDashboardData } from '../../config/clientDashboardData';
+import { 
+  IDemoCameraDevice, 
+  ICameraStream, 
+  ICameraPermissions,
+  ICameraError,
+  IUseCameraProps,
+  IUseCameraReturn 
+} from '../../interfaces/CameraTypes';
 import { 
   Dashboard as DashboardIcon,
   Analytics as AnalyticsIcon,
@@ -124,17 +138,58 @@ export const RoleDashboard: React.FC<IRoleDashboardProps> = ({ userRole: propUse
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [showAIDashboard, setShowAIDashboard] = useState(false);
+  
+  // 🎥 DEMO CAMERA STATE
+  const [showDemoSetupWizard, setShowDemoSetupWizard] = useState(false);
+  const [demoCameraSetupComplete, setDemoCameraSetupComplete] = useState(false);
+  const [showLiveVideoGrid, setShowLiveVideoGrid] = useState(false);
+  const [selectedCamera, setSelectedCamera] = useState<string | null>(null);
+  
+  // 📱 DEMO ACCOUNT VALIDATION
+  const isDemoAccount = user?.email === 'demo@onebarnai.com';
+  
+  // 🎬 CAMERA INTEGRATION - Only for demo account
+  const cameraHookProps = isDemoAccount ? {
+    enableAudio: true,
+    autoStart: false,
+    onPermissionChange: (permissions: ICameraPermissions) => {
+      console.log('[RoleDashboard] Camera permissions changed:', permissions);
+    },
+    onDeviceChange: (devices: IDemoCameraDevice[]) => {
+      console.log('[RoleDashboard] Camera devices changed:', devices);
+    },
+    onStreamChange: (streams: ICameraStream[]) => {
+      console.log('[RoleDashboard] Camera streams changed:', streams);
+    },
+    onError: (error: ICameraError) => {
+      console.error('[RoleDashboard] Camera error:', error);
+    }
+  } : {};
+  
+  const {
+    devices,
+    streams,
+    permissions,
+    errors,
+    isLoading: cameraLoading,
+    requestPermissions,
+    startCamera,
+    stopCamera,
+    switchCamera,
+    getDefaultDevice,
+    clearErrors
+  } = useLocalCamera(cameraHookProps);
 
   // Convert user to User type for AI chat
   const aiChatUser = {
-    id: user?.id || `${userRole}-001`,
+    id: `${userRole}-001`,
     name: user?.name || user?.email?.split('@')[0] || userRole,
     email: user?.email || `${userRole}@example.com`,
     role: 'admin' as const,
     status: 'active' as const,
     lastLogin: new Date().toISOString(),
-    barn: user?.barn || 'Sunset Stables',
-    joinDate: user?.joinDate || '2024-01-01',
+    barn: 'Sunset Stables',
+    joinDate: '2024-01-01',
     permissions: roleConfig?.permissions.map(p => p.resource) || []
   };
 
@@ -348,6 +403,10 @@ export const RoleDashboard: React.FC<IRoleDashboardProps> = ({ userRole: propUse
       setTimeout(() => {
         setShowAIDashboard(true);
       }, 100);
+    }
+    // 🎥 DEMO CAMERA LOGIC
+    if (moduleId === 'demo-camera') {
+      setShowDemoSetupWizard(true);
     }
   };
 
@@ -646,6 +705,16 @@ export const RoleDashboard: React.FC<IRoleDashboardProps> = ({ userRole: propUse
           <h2 style={styles.sectionTitle}>
             <GroupIcon />
             Available Modules
+            {isDemoAccount && (
+              <span style={{
+                fontSize: brandConfig.typography.fontSizeSm,
+                fontWeight: brandConfig.typography.weightNormal,
+                color: brandConfig.colors.championGold,
+                marginLeft: brandConfig.spacing.sm
+              }}>
+                - Demo Account Features
+              </span>
+            )}
           </h2>
           <div style={styles.quickActionsGrid}>
             {availableModules.map((module) => (
@@ -654,6 +723,11 @@ export const RoleDashboard: React.FC<IRoleDashboardProps> = ({ userRole: propUse
                 style={{
                   ...styles.actionCard,
                   borderColor: module.color,
+                  ...(isDemoAccount && module.id === 'demo-camera' && {
+                    border: `3px solid ${module.color}`,
+                    boxShadow: `0 0 20px ${module.color}40`,
+                    backgroundColor: `${module.color}05`
+                  })
                 }}
                 onClick={() => handleModuleClick(module.id)}
                 onMouseOver={(e) => {
@@ -661,24 +735,61 @@ export const RoleDashboard: React.FC<IRoleDashboardProps> = ({ userRole: propUse
                   e.currentTarget.style.transform = 'translateY(-3px)';
                 }}
                 onMouseOut={(e) => {
-                  e.currentTarget.style.backgroundColor = brandConfig.colors.barnWhite;
+                  const baseColor = isDemoAccount && module.id === 'demo-camera' 
+                    ? `${module.color}05` 
+                    : brandConfig.colors.barnWhite;
+                  e.currentTarget.style.backgroundColor = baseColor;
                   e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
                 <div style={{ color: module.color, marginBottom: brandConfig.spacing.md }}>
                   {module.icon}
+                  {isDemoAccount && module.id === 'demo-camera' && (
+                    <span style={{
+                      fontSize: brandConfig.typography.fontSizeXs,
+                      marginLeft: brandConfig.spacing.xs,
+                      color: brandConfig.colors.championGold
+                    }}>
+                      LIVE
+                    </span>
+                  )}
                 </div>
                 <h3 style={{
                   fontSize: brandConfig.typography.fontSizeLg,
                   fontWeight: brandConfig.typography.weightSemiBold,
                   color: brandConfig.colors.midnightBlack,
                   margin: `0 0 ${brandConfig.spacing.xs} 0`,
-                }}>{module.title}</h3>
+                }}>
+                  {module.title}
+                  {isDemoAccount && module.id === 'demo-camera' && (
+                    <span style={{
+                      fontSize: brandConfig.typography.fontSizeXs,
+                      color: brandConfig.colors.championGold,
+                      marginLeft: brandConfig.spacing.xs,
+                      fontWeight: brandConfig.typography.weightBold
+                    }}>
+                      ✨ ACTIVE
+                    </span>
+                  )}
+                </h3>
                 <p style={{
                   fontSize: brandConfig.typography.fontSizeSm,
                   color: brandConfig.colors.neutralGray,
                   margin: `0 0 ${brandConfig.spacing.sm} 0`,
-                }}>{module.description}</p>
+                }}>
+                  {module.description}
+                  {isDemoAccount && module.id === 'demo-camera' && (
+                    <span style={{
+                      display: 'block',
+                      marginTop: brandConfig.spacing.xs,
+                      fontSize: brandConfig.typography.fontSizeXs,
+                      color: brandConfig.colors.stableMahogany,
+                      fontWeight: brandConfig.typography.weightSemiBold
+                    }}>
+                      Click to start live camera demo
+                    </span>
+                  )}
+                </p>
                 <div style={{
                   fontSize: brandConfig.typography.fontSizeXs,
                   color: brandConfig.colors.neutralGray,
@@ -1021,15 +1132,300 @@ export const RoleDashboard: React.FC<IRoleDashboardProps> = ({ userRole: propUse
       />
       
       <main style={styles.main}>
+        {/* 🎭 DEBUG DEMO INDICATOR */}
+        {isDemoAccount && (
+          <div style={{
+            backgroundColor: brandConfig.colors.championGold,
+            color: brandConfig.colors.midnightBlack,
+            padding: brandConfig.spacing.md,
+            textAlign: 'center',
+            fontWeight: 'bold',
+            fontSize: brandConfig.typography.fontSize2xl,
+            borderBottom: `2px solid ${brandConfig.colors.errorRed}`,
+            marginBottom: brandConfig.spacing.lg
+          }}>
+            🎭 DEMO ACCOUNT ACTIVE - Camera Features Available! 🎥
+          </div>
+        )}
+        
         {/* Header Section */}
-        <section style={styles.headerSection}>
-          <h1 style={styles.welcomeTitle}>
-            {welcomeMessage.title}
-          </h1>
-          <p style={styles.welcomeSubtitle}>
-            {welcomeMessage.subtitle}
-          </p>
+      <section style={styles.headerSection}>
+        <h1 style={styles.welcomeTitle}>
+          {welcomeMessage.title}
+        </h1>
+        <p style={styles.welcomeSubtitle}>
+          {welcomeMessage.subtitle}
+        </p>
+        
+        {/* 🎥 DEMO ACCOUNT BADGE */}
+        {isDemoAccount && (
+          <div style={{
+            display: 'inline-block',
+            padding: `${brandConfig.spacing.sm} ${brandConfig.spacing.md}`,
+            backgroundColor: brandConfig.colors.championGold,
+            color: brandConfig.colors.midnightBlack,
+            borderRadius: brandConfig.layout.borderRadius,
+            fontSize: brandConfig.typography.fontSizeSm,
+            fontWeight: brandConfig.typography.weightBold,
+            textTransform: 'uppercase' as const,
+            letterSpacing: '0.5px',
+            marginTop: brandConfig.spacing.sm,
+            border: `2px solid ${brandConfig.colors.stableMahogany}`,
+            boxShadow: brandConfig.layout.boxShadow
+          }}>
+            🎥 LIVE CAMERA DEMO ACCOUNT
+          </div>
+        )}
+        
+        {/* 💼 BUSINESS PARTNER INSTRUCTIONS */}
+        {isDemoAccount && (
+          <div style={{
+            marginTop: brandConfig.spacing.lg,
+            padding: brandConfig.spacing.lg,
+            backgroundColor: `${brandConfig.colors.ribbonBlue}10`,
+            border: `2px solid ${brandConfig.colors.ribbonBlue}`,
+            borderRadius: brandConfig.layout.borderRadius
+          }}>
+            <h3 style={{
+              fontSize: brandConfig.typography.fontSizeLg,
+              fontWeight: brandConfig.typography.weightBold,
+              color: brandConfig.colors.ribbonBlue,
+              marginBottom: brandConfig.spacing.md,
+              display: 'flex',
+              alignItems: 'center',
+              gap: brandConfig.spacing.xs
+            }}>
+              💼 Business Partner Demo Guide
+            </h3>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gap: brandConfig.spacing.md
+            }}>
+              <div>
+                <h4 style={{
+                  fontSize: brandConfig.typography.fontSizeBase,
+                  fontWeight: brandConfig.typography.weightSemiBold,
+                  color: brandConfig.colors.midnightBlack,
+                  marginBottom: brandConfig.spacing.xs
+                }}>
+                  🎯 Demo Flow:
+                </h4>
+                <ol style={{
+                  fontSize: brandConfig.typography.fontSizeSm,
+                  color: brandConfig.colors.midnightBlack,
+                  paddingLeft: brandConfig.spacing.md,
+                  margin: 0
+                }}>
+                  <li>Click "Live Camera Demo" module below</li>
+                  <li>Complete camera setup wizard</li>
+                  <li>Grant camera permissions</li>
+                  <li>Select your camera device</li>
+                  <li>Experience live AI analysis</li>
+                </ol>
+              </div>
+              
+              <div>
+                <h4 style={{
+                  fontSize: brandConfig.typography.fontSizeBase,
+                  fontWeight: brandConfig.typography.weightSemiBold,
+                  color: brandConfig.colors.midnightBlack,
+                  marginBottom: brandConfig.spacing.xs
+                }}>
+                  🔧 Requirements:
+                </h4>
+                <ul style={{
+                  fontSize: brandConfig.typography.fontSizeSm,
+                  color: brandConfig.colors.midnightBlack,
+                  paddingLeft: brandConfig.spacing.md,
+                  margin: 0
+                }}>
+                  <li>Modern browser (Chrome recommended)</li>
+                  <li>Working webcam or external camera</li>
+                  <li>Good lighting for video quality</li>
+                  <li>HTTPS connection (automatic)</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 style={{
+                  fontSize: brandConfig.typography.fontSizeBase,
+                  fontWeight: brandConfig.typography.weightSemiBold,
+                  color: brandConfig.colors.midnightBlack,
+                  marginBottom: brandConfig.spacing.xs
+                }}>
+                  ⚡ Features:
+                </h4>
+                <ul style={{
+                  fontSize: brandConfig.typography.fontSizeSm,
+                  color: brandConfig.colors.midnightBlack,
+                  paddingLeft: brandConfig.spacing.md,
+                  margin: 0
+                }}>
+                  <li>Real-time camera access</li>
+                  <li>Professional demo interface</li>
+                  <li>Automatic error recovery</li>
+                  <li>30-minute session limit</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* 🎥 DEMO STATUS PANEL */}
+      {isDemoAccount && (
+        <section style={{
+          ...styles.section,
+          backgroundColor: `${brandConfig.colors.championGold}10`,
+          border: `2px solid ${brandConfig.colors.championGold}`,
+          marginBottom: brandConfig.spacing.lg
+        }}>
+          <h3 style={{
+            ...styles.sectionTitle,
+            fontSize: brandConfig.typography.fontSizeLg,
+            color: brandConfig.colors.stableMahogany,
+            marginBottom: brandConfig.spacing.md
+          }}>
+            📹 Camera Demo Status
+          </h3>
+          
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: brandConfig.spacing.md
+          }}>
+            <div style={{
+              padding: brandConfig.spacing.md,
+              backgroundColor: brandConfig.colors.barnWhite,
+              borderRadius: brandConfig.layout.borderRadius,
+              border: `1px solid ${brandConfig.colors.sterlingSilver}`
+            }}>
+              <h4 style={{
+                fontSize: brandConfig.typography.fontSizeBase,
+                fontWeight: brandConfig.typography.weightSemiBold,
+                color: brandConfig.colors.midnightBlack,
+                marginBottom: brandConfig.spacing.xs
+              }}>
+                Devices Available
+              </h4>
+              <p style={{
+                fontSize: brandConfig.typography.fontSize2xl,
+                fontWeight: brandConfig.typography.weightBold,
+                color: devices.length > 0 ? brandConfig.colors.successGreen : brandConfig.colors.neutralGray,
+                margin: 0
+              }}>
+                {devices.length}
+              </p>
+            </div>
+            
+            <div style={{
+              padding: brandConfig.spacing.md,
+              backgroundColor: brandConfig.colors.barnWhite,
+              borderRadius: brandConfig.layout.borderRadius,
+              border: `1px solid ${brandConfig.colors.sterlingSilver}`
+            }}>
+              <h4 style={{
+                fontSize: brandConfig.typography.fontSizeBase,
+                fontWeight: brandConfig.typography.weightSemiBold,
+                color: brandConfig.colors.midnightBlack,
+                marginBottom: brandConfig.spacing.xs
+              }}>
+                Active Streams
+              </h4>
+              <p style={{
+                fontSize: brandConfig.typography.fontSize2xl,
+                fontWeight: brandConfig.typography.weightBold,
+                color: streams.length > 0 ? brandConfig.colors.successGreen : brandConfig.colors.neutralGray,
+                margin: 0
+              }}>
+                {streams.length}
+              </p>
+            </div>
+            
+            <div style={{
+              padding: brandConfig.spacing.md,
+              backgroundColor: brandConfig.colors.barnWhite,
+              borderRadius: brandConfig.layout.borderRadius,
+              border: `1px solid ${brandConfig.colors.sterlingSilver}`
+            }}>
+              <h4 style={{
+                fontSize: brandConfig.typography.fontSizeBase,
+                fontWeight: brandConfig.typography.weightSemiBold,
+                color: brandConfig.colors.midnightBlack,
+                marginBottom: brandConfig.spacing.xs
+              }}>
+                Camera Permission
+              </h4>
+              <p style={{
+                fontSize: brandConfig.typography.fontSizeBase,
+                fontWeight: brandConfig.typography.weightSemiBold,
+                color: permissions.camera === 'granted' ? brandConfig.colors.successGreen : 
+                      permissions.camera === 'denied' ? brandConfig.colors.errorRed : brandConfig.colors.alertAmber,
+                margin: 0,
+                textTransform: 'uppercase' as const
+              }}>
+                {permissions.camera}
+              </p>
+            </div>
+            
+            <div style={{
+              padding: brandConfig.spacing.md,
+              backgroundColor: brandConfig.colors.barnWhite,
+              borderRadius: brandConfig.layout.borderRadius,
+              border: `1px solid ${brandConfig.colors.sterlingSilver}`
+            }}>
+              <h4 style={{
+                fontSize: brandConfig.typography.fontSizeBase,
+                fontWeight: brandConfig.typography.weightSemiBold,
+                color: brandConfig.colors.midnightBlack,
+                marginBottom: brandConfig.spacing.xs
+              }}>
+                Setup Status
+              </h4>
+              <p style={{
+                fontSize: brandConfig.typography.fontSizeBase,
+                fontWeight: brandConfig.typography.weightSemiBold,
+                color: demoCameraSetupComplete ? brandConfig.colors.successGreen : brandConfig.colors.alertAmber,
+                margin: 0
+              }}>
+                {demoCameraSetupComplete ? 'COMPLETE' : 'PENDING'}
+              </p>
+            </div>
+          </div>
+          
+          {errors.length > 0 && (
+            <div style={{
+              marginTop: brandConfig.spacing.md,
+              padding: brandConfig.spacing.md,
+              backgroundColor: `${brandConfig.colors.errorRed}10`,
+              borderRadius: brandConfig.layout.borderRadius,
+              border: `1px solid ${brandConfig.colors.errorRed}`
+            }}>
+              <h4 style={{
+                fontSize: brandConfig.typography.fontSizeBase,
+                fontWeight: brandConfig.typography.weightSemiBold,
+                color: brandConfig.colors.errorRed,
+                marginBottom: brandConfig.spacing.xs
+              }}>
+                Camera Issues ({errors.length})
+              </h4>
+              {errors.slice(0, 3).map((error, index) => (
+                <p key={index} style={{
+                  fontSize: brandConfig.typography.fontSizeSm,
+                  color: brandConfig.colors.midnightBlack,
+                  margin: `${brandConfig.spacing.xs} 0`,
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>
+                  <span style={{ marginRight: brandConfig.spacing.xs }}>⚠️</span>
+                  {error.businessPartnerMessage || error.message}
+                </p>
+              ))}
+            </div>
+          )}
         </section>
+      )}
 
         {/* Tab Content */}
         {selectedTab === 'overview' && renderOverview()}
@@ -1048,9 +1444,48 @@ export const RoleDashboard: React.FC<IRoleDashboardProps> = ({ userRole: propUse
       
       {/* AI Dashboard */}
       {showAIDashboard && (
-        <AIObservationDashboard
-          isOpen={showAIDashboard}
-          onClose={() => setShowAIDashboard(false)}
+        <AIObservationDashboard tenantId={tenantId} />
+      )}
+
+      {/* 🎥 DEMO CAMERA WIZARD */}
+      {showDemoSetupWizard && (
+        <DemoSetupWizard
+          isOpen={showDemoSetupWizard}
+          onClose={() => setShowDemoSetupWizard(false)}
+          onComplete={(config) => {
+            setDemoCameraSetupComplete(true);
+            setShowDemoSetupWizard(false);
+            setShowLiveVideoGrid(true);
+          }}
+          initialConfig={demoCameraConfig.settings}
+        />
+      )}
+
+      {/* 🎥 LIVE VIDEO GRID */}
+      {showLiveVideoGrid && demoCameraSetupComplete && (
+        <LiveVideoGrid
+          cameras={streams.map(stream => ({
+            id: stream.id,
+            name: devices.find(d => d.deviceId === stream.deviceId)?.label || `Demo Camera ${stream.deviceId}`,
+            location: 'Live Demo',
+            status: 'online' as const,
+            quality: '1080p' as const,
+            features: ['Live Feed', 'HD Quality', 'Real-time AI Analysis'],
+            isLive: true,
+            isPremium: false,
+            horses: [],
+            
+            // 🎬 DEMO CAMERA PROPERTIES
+            isDemoCamera: true,
+            stream: stream.stream,
+            url: undefined
+          }))}
+          selectedCamera={selectedCamera || (streams.length > 0 ? streams[0].id : null)}
+          onCameraSelect={setSelectedCamera}
+          alerts={[]}
+          onEmergencyContact={(type, message) => {
+            console.log(`Emergency contact: ${type} - ${message}`);
+          }}
         />
       )}
     </div>
