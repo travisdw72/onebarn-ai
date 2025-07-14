@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { brandConfig } from '../../config/brandConfig';
 import { useNavigation } from '../../contexts/NavigationContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { Logo } from '../common/Logo';
+import { AnimatedLogo } from '../common/AnimatedLogo';
 
 interface ITab {
   id: string;
@@ -275,6 +275,16 @@ export const Header: React.FC<HeaderProps> = ({
       navigateTo('features');
       return;
     }
+    // Special case: navigate to about page
+    if (section === '#about') {
+      navigateTo('about');
+      return;
+    }
+    // Special case: navigate to contact page
+    if (section === '#contact') {
+      navigateTo('contact');
+      return;
+    }
     // Scroll to section for single page navigation
     if (section.startsWith('#')) {
       const element = document.querySelector(section);
@@ -340,10 +350,13 @@ export const Header: React.FC<HeaderProps> = ({
       `}</style>
       <header style={styles.header}>
         <div style={styles.headerContent} className="header-mobile-content">
-          <Logo 
-            variant="header" 
-            theme="light" 
+          {/* Logo Section */}
+          <AnimatedLogo
+            variant="header"
+            theme="dark"
             onClick={handleLogoClick}
+            autoPlay={false}
+            animateOnClick={true}
           />
           
           <div style={styles.rightSection}>

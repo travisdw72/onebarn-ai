@@ -4,7 +4,7 @@
  * Config-driven mobile-first design for barn environments
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Brain, 
   TrendingUp, 
@@ -12,10 +12,13 @@ import {
   AlertCircle, 
   Clock, 
   Activity, 
-  Heart 
+  Heart,
+  Camera 
 } from 'lucide-react';
 import { brandConfig } from '../../config/brandConfig';
 import { newDashboardEnhancements } from '../../config/dashboardConfig';
+import { useAuth } from '../../contexts/AuthContext';
+import { ScheduledAIMonitor } from '../ai-monitor/ScheduledAIMonitor';
 
 interface AIInsightsPanelProps {
   insights: any[];
@@ -28,7 +31,58 @@ export const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
   alerts,
   horses
 }) => {
-  const [activeTab, setActiveTab] = useState<'alerts' | 'insights' | 'trends'>('alerts');
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'alerts' | 'insights' | 'trends' | 'monitoring'>('alerts');
+  const [cameraConnected, setCameraConnected] = useState(false);
+  const [isStreamActive, setIsStreamActive] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  
+  // 📱 DEMO ACCOUNT VALIDATION
+  const isDemoAccount = user?.email === 'demo@onebarnai.com';
+  
+  console.log('🔍 [AIInsightsPanel] COMPONENT RENDERED');
+  console.log('🔍 [AIInsightsPanel] User:', user);
+  console.log('🔍 [AIInsightsPanel] User Email:', user?.email);
+  console.log('🔍 [AIInsightsPanel] IsDemoAccount:', isDemoAccount);
+  console.log('🔍 [AIInsightsPanel] Insights:', insights);
+  console.log('🔍 [AIInsightsPanel] Alerts:', alerts);
+  console.log('🔍 [AIInsightsPanel] Horses:', horses);
+  console.log('🔍 [AIInsightsPanel] ActiveTab:', activeTab);
+  console.log('🔍 [AIInsightsPanel] CameraConnected:', cameraConnected);
+  console.log('🔍 [AIInsightsPanel] IsStreamActive:', isStreamActive);
+
+  // 🎥 CAMERA CONNECTION HANDLER FOR DEMO ACCOUNT
+  const handleCameraConnection = async () => {
+    console.log('🎬 [AIInsightsPanel] handleCameraConnection called');
+    console.log('🎬 [AIInsightsPanel] isDemoAccount:', isDemoAccount);
+    
+    if (!isDemoAccount) {
+      console.log('🚫 [AIInsightsPanel] Not demo account - returning early');
+      return;
+    }
+    
+    try {
+      console.log('🎬 [AIInsightsPanel] Starting camera connection for AI monitoring...');
+      
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 1280, height: 720 },
+        audio: false
+      });
+      
+      console.log('🎬 [AIInsightsPanel] Stream obtained:', stream);
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+        setIsStreamActive(true);
+        setCameraConnected(true);
+        setActiveTab('monitoring');
+        console.log('✅ [AIInsightsPanel] Camera connected, switching to AI monitoring tab');
+      }
+    } catch (error) {
+      console.error('❌ [AIInsightsPanel] Camera connection failed:', error);
+    }
+  };
 
   const getInsightIcon = (type: string) => {
     switch (type) {
@@ -215,6 +269,36 @@ export const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
           <TrendingUp style={{ width: '16px', height: '16px' }} />
           {newDashboardEnhancements.insights.trendsTab}
         </button>
+                 {isDemoAccount && (
+           <button
+             onClick={() => {
+               console.log('🔍 [AIInsightsPanel] Camera button clicked');
+               console.log('🔍 [AIInsightsPanel] cameraConnected:', cameraConnected);
+               console.log('🔍 [AIInsightsPanel] activeTab:', activeTab);
+               
+               if (!cameraConnected) {
+                 console.log('🔍 [AIInsightsPanel] Calling handleCameraConnection');
+                 handleCameraConnection();
+               } else {
+                 console.log('🔍 [AIInsightsPanel] Setting activeTab to monitoring');
+                 setActiveTab('monitoring');
+               }
+             }}
+             style={getTabStyle(activeTab === 'monitoring')}
+           >
+             <Camera style={{ width: '16px', height: '16px' }} />
+             {cameraConnected ? '📹 AI Monitoring' : '🎥 Connect Camera'}
+             {isStreamActive && (
+               <span style={{
+                 width: '8px',
+                 height: '8px',
+                 borderRadius: '50%',
+                 backgroundColor: brandConfig.colors.successGreen,
+                 marginLeft: brandConfig.spacing.xs,
+               }} />
+             )}
+           </button>
+         )}
       </div>
 
       {/* Content Area */}
@@ -531,6 +615,35 @@ export const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
             ))}
           </div>
         )}
+
+                 {activeTab === 'monitoring' && (
+           <div style={{ padding: brandConfig.spacing.md }}>
+             <ScheduledAIMonitor 
+               videoRef={videoRef} 
+               isStreamActive={isStreamActive} 
+               onAnalysisComplete={(analysis) => {
+                 console.log('🤖 [AIInsightsPanel] AI Analysis Complete:', analysis);
+               }}
+             />
+             
+             {/* Hidden video element for AI monitoring */}
+             <video
+               ref={videoRef}
+               style={{
+                 position: 'absolute',
+                 top: '-9999px',
+                 left: '-9999px',
+                 width: '1px',
+                 height: '1px',
+                 opacity: 0,
+                 pointerEvents: 'none',
+               }}
+               muted
+               autoPlay
+               playsInline
+             />
+           </div>
+         )}
       </div>
 
       {/* Emergency Actions */}

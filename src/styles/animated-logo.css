@@ -1,0 +1,126 @@
+/* Animated Logo Styles */
+
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes coinFlip {
+  0% {
+    transform: rotateY(0deg) scale(1);
+  }
+  20% {
+    transform: rotateY(180deg) scale(1.1);
+  }
+  40% {
+    transform: rotateY(360deg) scale(1.05);
+  }
+  60% {
+    transform: rotateY(540deg) scale(1.1);
+  }
+  80% {
+    transform: rotateY(720deg) scale(1.05);
+  }
+  90% {
+    transform: rotateY(800deg) scale(1.02);
+  }
+  100% {
+    transform: rotateY(720deg) scale(1);
+  }
+}
+
+@keyframes glowPulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+    filter: blur(15px);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.2);
+    filter: blur(25px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+    filter: blur(35px);
+  }
+}
+
+/* Logo Container Styles */
+.animated-logo-container {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+.animated-logo {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+}
+
+.logo-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(212, 165, 116, 0.4) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(10px);
+  z-index: 0;
+}
+
+/* Text Logo Gradient Styles */
+.gradient-text {
+  background: linear-gradient(45deg, #F5E6D3, #D4A574, #F5E6D3);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 3s ease-in-out infinite;
+  text-shadow: 0 0 20px rgba(212, 165, 116, 0.3);
+}
+
+/* Hover Effects */
+.animated-logo:hover {
+  cursor: pointer;
+}
+
+.animated-logo.interactive:hover {
+  animation: pulse 0.6s ease-in-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .animated-logo-container {
+    perspective: 600px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animated-logo,
+  .logo-glow,
+  .gradient-text {
+    animation: none !important;
+  }
+  
+  .animated-logo {
+    transform: none !important;
+  }
+} 

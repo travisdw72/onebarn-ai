@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { brandConfig } from '../../config/brandConfig';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigation } from '../../contexts/NavigationContext';
@@ -8,7 +8,7 @@ import { SecureAIChat } from '../common/SecureAIChat';
 import { useSecureAIChat } from '../../hooks/useSecureAIChat';
 import { DashboardFooter } from '../layout/DashboardFooter';
 import { AIAlertWidget } from '../ai/AIAlertWidget';
-import { AIObservationDashboard } from '../ai/AIObservationDashboard';
+import { AIMonitorDashboard } from '../ai-monitor/AIMonitorDashboard';
 import { Header } from '../layout/Header';
 import { aiConfig } from '../../config/aiConfig';
 import { useAI } from '../../contexts/AIContext';
@@ -22,9 +22,12 @@ import { EnhancedSupportStaffTab } from '../support/enhanced/EnhancedSupportStaf
 // 🎥 DEMO CAMERA IMPORTS
 import { DemoSetupWizard } from '../demo/DemoSetupWizard';
 import { useLocalCamera } from '../../hooks/useLocalCamera';
-import { LiveVideoGrid } from './LiveVideoGrid';
+import { LiveVideoGrid } from '../camera/LiveVideoGrid';
 import { demoCameraConfig } from '../../config/demoCameraConfig';
 import { clientDashboardData } from '../../config/clientDashboardData';
+import { SimpleAIStatus } from '../ai-monitor/SimpleAIStatus';
+import { ScheduledAIMonitor } from '../ai-monitor/ScheduledAIMonitor';
+import { VideoCameraOutlined, EyeOutlined } from '@ant-design/icons';
 import { 
   IDemoCameraDevice, 
   ICameraStream, 
@@ -129,7 +132,7 @@ export const RoleDashboard: React.FC<IRoleDashboardProps> = ({ userRole: propUse
   
   // Get role-specific configuration
   const availableModules = getDashboardModulesForRole(userRole);
-  const quickActions = getQuickActionsForRole(userRole);
+  const baseQuickActions = getQuickActionsForRole(userRole);
   const analyticsMetrics = getAnalyticsForRole(userRole);
   const roleTheme = getRoleTheme(userRole);
   const welcomeMessage = getWelcomeMessage(userRole, user?.name || user?.email?.split('@')[0]);
@@ -144,9 +147,50 @@ export const RoleDashboard: React.FC<IRoleDashboardProps> = ({ userRole: propUse
   const [demoCameraSetupComplete, setDemoCameraSetupComplete] = useState(false);
   const [showLiveVideoGrid, setShowLiveVideoGrid] = useState(false);
   const [selectedCamera, setSelectedCamera] = useState<string | null>(null);
+  const [showScheduledMonitor, setShowScheduledMonitor] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isStreamActive, setIsStreamActive] = useState(false);
   
   // 📱 DEMO ACCOUNT VALIDATION
   const isDemoAccount = user?.email === 'demo@onebarnai.com';
+
+  // Add demo-specific quick actions
+  const quickActions = isDemoAccount ? [
+    {
+      id: 'start-camera-ai',
+      title: '🎥 Start Camera + AI',
+      description: 'Launch camera with AI monitoring',
+      icon: React.createElement(VideoCameraOutlined),
+      color: brandConfig.colors.stableMahogany,
+      action: async () => {
+        console.log('🎬 [Dashboard] Starting camera for AI monitoring...');
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 1280, height: 720 },
+            audio: false
+          });
+          
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            videoRef.current.play();
+            setIsStreamActive(true);
+            console.log('✅ [Dashboard] Camera stream started successfully');
+          }
+        } catch (error) {
+          console.error('❌ [Dashboard] Camera access failed:', error);
+        }
+      }
+    },
+    {
+      id: 'ai-dashboard',
+      title: '🤖 AI Dashboard',
+      description: 'Open AI monitoring dashboard',
+      icon: React.createElement(EyeOutlined),
+      color: brandConfig.colors.hunterGreen,
+      action: () => setShowAIDashboard(true)
+    },
+    ...baseQuickActions.slice(0, 3) // Keep first 3 regular actions
+  ] : baseQuickActions;
   
   // 🎬 CAMERA INTEGRATION - Only for demo account
   const cameraHookProps = isDemoAccount ? {
@@ -652,6 +696,51 @@ export const RoleDashboard: React.FC<IRoleDashboardProps> = ({ userRole: propUse
             </div>
           ))}
         </div>
+      )}
+
+      {/* AI Monitoring Status Widget - Demo Account Only */}
+      {isDemoAccount && (
+        <section style={styles.section}>
+          <h2 style={styles.sectionTitle}>
+            <AIIcon />
+            💼 AI Analysis System
+          </h2>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: brandConfig.spacing.lg,
+            marginBottom: brandConfig.spacing.lg
+          }}>
+            <SimpleAIStatus 
+              onOpenDashboard={() => setShowAIDashboard(true)}
+            />
+          </div>
+          
+          {/* Scheduled AI Monitor */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr',
+            gap: brandConfig.spacing.lg,
+            marginTop: brandConfig.spacing.lg
+          }}>
+            {/* Hidden video element for AI monitoring */}
+            <video
+              ref={videoRef}
+              style={{ display: 'none' }}
+              autoPlay
+              playsInline
+              muted
+            />
+            
+            <ScheduledAIMonitor
+              videoRef={videoRef}
+              isStreamActive={isStreamActive}
+              onAnalysisComplete={(analysis) => {
+                console.log('📊 [Dashboard] AI Analysis completed:', analysis);
+              }}
+            />
+          </div>
+        </section>
       )}
 
       {/* Quick Actions */}
@@ -1444,7 +1533,52 @@ export const RoleDashboard: React.FC<IRoleDashboardProps> = ({ userRole: propUse
       
       {/* AI Dashboard */}
       {showAIDashboard && (
-        <AIObservationDashboard tenantId={tenantId} />
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            width: '95%',
+            height: '90%',
+            backgroundColor: brandConfig.colors.barnWhite,
+            borderRadius: brandConfig.layout.borderRadius,
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <button
+              onClick={() => setShowAIDashboard(false)}
+              style={{
+                position: 'absolute',
+                top: brandConfig.spacing.sm,
+                right: brandConfig.spacing.sm,
+                background: 'none',
+                border: 'none',
+                fontSize: '24px',
+                cursor: 'pointer',
+                zIndex: 10000,
+                color: brandConfig.colors.neutralGray
+              }}
+            >
+              ×
+            </button>
+            <AIMonitorDashboard 
+              maxHeight="100%"
+              autoRefresh={true}
+              showControls={true}
+              showPerformanceMetrics={true}
+              compactMode={false}
+              demoMode={true}
+            />
+          </div>
+        </div>
       )}
 
       {/* 🎥 DEMO CAMERA WIZARD */}
@@ -1461,33 +1595,7 @@ export const RoleDashboard: React.FC<IRoleDashboardProps> = ({ userRole: propUse
         />
       )}
 
-      {/* 🎥 LIVE VIDEO GRID */}
-      {showLiveVideoGrid && demoCameraSetupComplete && (
-        <LiveVideoGrid
-          cameras={streams.map(stream => ({
-            id: stream.id,
-            name: devices.find(d => d.deviceId === stream.deviceId)?.label || `Demo Camera ${stream.deviceId}`,
-            location: 'Live Demo',
-            status: 'online' as const,
-            quality: '1080p' as const,
-            features: ['Live Feed', 'HD Quality', 'Real-time AI Analysis'],
-            isLive: true,
-            isPremium: false,
-            horses: [],
-            
-            // 🎬 DEMO CAMERA PROPERTIES
-            isDemoCamera: true,
-            stream: stream.stream,
-            url: undefined
-          }))}
-          selectedCamera={selectedCamera || (streams.length > 0 ? streams[0].id : null)}
-          onCameraSelect={setSelectedCamera}
-          alerts={[]}
-          onEmergencyContact={(type, message) => {
-            console.log(`Emergency contact: ${type} - ${message}`);
-          }}
-        />
-      )}
+      {/* 🎥 LIVE VIDEO GRID - Replaced with ScheduledAIMonitor for automated schedule */}
     </div>
   );
 }; 

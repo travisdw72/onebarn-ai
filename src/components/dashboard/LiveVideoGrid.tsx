@@ -9,18 +9,24 @@
  * - WebRTC stream handling for business partner demos
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   Camera, 
   Volume2, 
   VolumeX, 
   Maximize2, 
   AlertTriangle, 
-  Activity 
+  Activity,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { brandConfig } from '../../config/brandConfig';
 import { newDashboardEnhancements } from '../../config/dashboardConfig';
 import { newDashboardConfig } from '../../config/newDashboardConfig';
+import { dashboardConfig } from '../../config/dashboardConfig';
+
+import { useAuth } from '../../contexts/AuthContext';
+import { ScheduledAIMonitor } from '../ai-monitor/ScheduledAIMonitor';
 
 // 🎥 ENHANCED CAMERA FEED - Supports both mock and real streams
 interface IEnhancedCameraFeed {
@@ -57,6 +63,7 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
   onEmergencyContact,
   userEmail
 }) => {
+  const { user } = useAuth();
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({});
@@ -78,6 +85,23 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
   // 🎬 FULLSCREEN HOVER STATE
   const [showCameraOverlay, setShowCameraOverlay] = useState(false);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // 🤖 AI MONITORING STATE - Updated to be background-only
+  const [aiMonitoringActive, setAIMonitoringActive] = useState(false);
+  const [showAIPanel, setShowAIPanel] = useState(false);
+  const aiVideoRef = useRef<HTMLVideoElement>(null);
+  
+  // 🔍 DEBUG LOGGING FOR DEMO ACCOUNT
+  useEffect(() => {
+    console.log('🔍 [LiveVideoGrid] Component mounted with props:');
+    console.log('🔍 [LiveVideoGrid] userEmail:', userEmail);
+    console.log('🔍 [LiveVideoGrid] selectedCamera:', selectedCamera);
+    console.log('🔍 [LiveVideoGrid] cameras:', cameras);
+    console.log('🔍 [LiveVideoGrid] isDemoAccount check:', userEmail === 'demo@onebarnai.com');
+    console.log('🔍 [LiveVideoGrid] connectedCameras:', connectedCameras);
+    console.log('🔍 [LiveVideoGrid] aiMonitoringActive:', aiMonitoringActive);
+    console.log('🔍 [LiveVideoGrid] showAIPanel:', showAIPanel);
+  }, [userEmail, selectedCamera, cameras, connectedCameras, aiMonitoringActive, showAIPanel]);
   
   // 🎬 DEMO SESSION TIMER
   useEffect(() => {
@@ -147,7 +171,7 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
     };
   }, []);
 
-  // 🎬 DEMO CAMERA STREAM HANDLING
+  // �� DEMO CAMERA STREAM HANDLING
   useEffect(() => {
     const selectedCameraData = cameras.find(c => c.id === selectedCamera);
     if (selectedCameraData && selectedCameraData.isDemoCamera && selectedCameraData.stream) {
@@ -249,10 +273,65 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
     }
   };
 
-  // Main container styles
+  // New AI monitoring integration
+  const handleCameraConnection = useCallback(async (cameraId: string) => {
+    console.log('🎬 [LiveVideoGrid] handleCameraConnection called');
+    console.log('🎬 [LiveVideoGrid] cameraId:', cameraId);
+    console.log('🎬 [LiveVideoGrid] userEmail:', userEmail);
+    console.log('🎬 [LiveVideoGrid] isDemoAccount:', userEmail === 'demo@onebarnai.com');
+    
+    try {
+      console.log('🎬 [LiveVideoGrid] Starting camera connection for AI monitoring...');
+      
+      // Enhanced camera connection with aspect ratio preservation
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          aspectRatio: { ideal: 16/9 }
+        }
+      });
+      
+      console.log('🎬 [LiveVideoGrid] Stream obtained:', stream);
+      
+      const videoElement = videoRefs.current[cameraId];
+      if (videoElement) {
+        videoElement.srcObject = stream;
+        // Ensure consistent styling for live stream
+        videoElement.style.objectFit = 'cover';
+        videoElement.style.width = '100%';
+        videoElement.style.height = '100%';
+        videoElement.style.backgroundColor = brandConfig.colors.midnightBlack;
+        
+        // 🤖 ASSIGN STREAM TO AI VIDEO REF FOR MONITORING
+        if (aiVideoRef.current) {
+          aiVideoRef.current.srcObject = stream;
+        }
+        
+        // Mark camera as connected
+        setConnectedCameras(prev => new Set(prev).add(cameraId));
+        
+        // 🤖 TRIGGER AI MONITORING FOR DEMO ACCOUNT
+        if (userEmail === 'demo@onebarnai.com') {
+          console.log('✅ [LiveVideoGrid] Camera connected, starting AI monitoring...');
+          console.log('✅ [LiveVideoGrid] AI monitoring video element connected');
+          setAIMonitoringActive(true);
+          setShowAIPanel(true);
+          
+          // Show success message
+          console.log('🎬 AI Monitoring Active - Camera connected successfully!');
+        }
+      }
+    } catch (err) {
+      console.error('❌ [LiveVideoGrid] Camera access denied:', err);
+      // Could add fallback or user guidance here
+    }
+  }, [userEmail]);
+
+  // Main container styles - Updated to support side panel
   const containerStyle: React.CSSProperties = {
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'row', // Changed to row to accommodate side panel
     height: '100%',
     backgroundColor: brandConfig.colors.midnightBlack,
     borderRadius: brandConfig.layout.borderRadius,
@@ -266,6 +345,14 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
       zIndex: 9999,
       borderRadius: 0,
     }),
+  };
+
+  // Video container styles - Updated to accommodate side panel
+  const videoContainerStyle: React.CSSProperties = {
+    flex: showAIPanel && !fullscreen ? '1' : '1',
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100%',
   };
 
   const mainVideoStyle: React.CSSProperties = {
@@ -395,39 +482,74 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
     border: `2px solid ${brandConfig.colors.stableMahogany}`,
   };
 
+  // AI Panel styles
+  const aiPanelStyle: React.CSSProperties = {
+    width: '350px',
+    backgroundColor: brandConfig.colors.barnWhite,
+    borderLeft: `1px solid ${brandConfig.colors.sterlingSilver}`,
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+    transition: 'all 0.3s ease',
+  };
+
+  const aiPanelHeaderStyle: React.CSSProperties = {
+    padding: brandConfig.spacing.md,
+    backgroundColor: brandConfig.colors.arenaSand,
+    borderBottom: `1px solid ${brandConfig.colors.sterlingSilver}`,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  };
+
+  const aiPanelContentStyle: React.CSSProperties = {
+    flex: 1,
+    overflow: 'auto',
+    padding: brandConfig.spacing.sm,
+  };
+
   return (
     <div style={containerStyle} onMouseMove={handleMouseMove}>
+      {/* Main Video Container */}
+      <div style={videoContainerStyle}>
       {/* Main Video Display */}
-      <div 
-        style={mainVideoStyle}
-      >
+        <div style={mainVideoStyle}>
         {selectedCamera ? (
           <div style={{ position: 'relative', width: '100%', height: '100%' }}>
             {(() => {
               const selectedCameraData = cameras.find(c => c.id === selectedCamera);
               const isDemoCamera = selectedCameraData?.isDemoCamera && selectedCameraData?.stream;
-              
               const isConnected = connectedCameras.has(selectedCamera);
               
               return (
                 <>
                   <video
-                    ref={el => videoRefs.current[selectedCamera] = el}
+                      ref={el => {
+                        videoRefs.current[selectedCamera] = el;
+                        if (el && isDemoCamera) {
+                          el.srcObject = selectedCameraData.stream!;
+                          el.play().catch(error => {
+                            console.error('[LiveVideoGrid] Failed to play video:', error);
+                          });
+                        }
+                      }}
                     style={videoStyle}
                     autoPlay
                     muted={!audioEnabled}
                     playsInline
-                    {...(isDemoCamera ? {} : { controls: false })}
-                  >
-                    {!isDemoCamera && selectedCameraData?.url && (
-                      <source 
-                        src={selectedCameraData.url} 
-                        type="video/mp4" 
-                      />
-                    )}
-                  </video>
+                      controls={false}
+                      onLoadedMetadata={() => {
+                        const cameraId = selectedCamera;
+                        setStreamStatus(prev => ({ ...prev, [cameraId]: 'active' }));
+                      }}
+                      onError={(e) => {
+                        const cameraId = selectedCamera;
+                        setStreamStatus(prev => ({ ...prev, [cameraId]: 'error' }));
+                        setStreamErrors(prev => ({ ...prev, [cameraId]: 'Failed to load video stream' }));
+                      }}
+                    />
                   
-                  {/* 🎥 SIMPLE DEMO CAMERA OVERLAY - Show for demo account when not connected */}
+                    {/* 🎥 CAMERA CONNECTION OVERLAY - Show for demo account when not connected */}
                   {userEmail === 'demo@onebarnai.com' && !isDemoCamera && !isConnected && (
                     <div 
                       style={{
@@ -446,32 +568,11 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
                         transition: 'all 0.2s ease',
                       }}
                                       onClick={() => {
-                  // Enhanced camera connection with aspect ratio preservation
-                  navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                      width: { ideal: 1920 },
-                      height: { ideal: 1080 },
-                      aspectRatio: { ideal: 16/9 }
-                    }
-                  })
-                    .then(stream => {
-                      const videoElement = videoRefs.current[selectedCamera];
-                      if (videoElement) {
-                        videoElement.srcObject = stream;
-                        // Ensure consistent styling for live stream
-                        videoElement.style.objectFit = 'cover';
-                        videoElement.style.width = '100%';
-                        videoElement.style.height = '100%';
-                        videoElement.style.backgroundColor = brandConfig.colors.midnightBlack;
-                        
-                        // Mark camera as connected
-                        setConnectedCameras(prev => new Set(prev).add(selectedCamera));
-                      }
-                    })
-                    .catch(err => {
-                      console.error('Camera access denied:', err);
-                      // Could add fallback or user guidance here
-                    });
+                          console.log('🔍 [LiveVideoGrid] Connect Camera button clicked');
+                          console.log('🔍 [LiveVideoGrid] selectedCamera:', selectedCamera);
+                          console.log('🔍 [LiveVideoGrid] userEmail:', userEmail);
+                          console.log('🔍 [LiveVideoGrid] About to call handleCameraConnection');
+                          handleCameraConnection(selectedCamera);
                 }}
                       onMouseOver={(e) => {
                         e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
@@ -491,21 +592,16 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
                       </div>
                     </div>
                   )}
-                </>
-              );
-            })()}
 
-            {/* AI Overlay Indicators */}
-            <div 
-              style={{
+                    {/* Alert Overlays */}
+                    <div style={{
                 position: 'absolute',
                 top: brandConfig.spacing.md,
                 left: brandConfig.spacing.md,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: brandConfig.spacing.xs,
-              }}
-            >
+                      right: brandConfig.spacing.md,
+                      pointerEvents: 'none',
+                      zIndex: 5,
+                    }}>
               {getCameraAlerts(selectedCamera).map(alert => (
                 <div 
                   key={alert.id}
@@ -523,6 +619,7 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
                     border: alert.severity === 'critical' 
                       ? `2px solid ${brandConfig.colors.errorRed}`
                       : `2px solid ${brandConfig.colors.alertAmber}`,
+                            marginBottom: brandConfig.spacing.xs,
                   }}
                 >
                   <AlertTriangle 
@@ -541,7 +638,7 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
                       color: brandConfig.colors.neutralGray 
                     }}
                   >
-                    {alert.aiConfidence}% confidence
+                            {new Date(alert.timestamp).toLocaleTimeString()}
                   </span>
                 </div>
               ))}
@@ -561,29 +658,20 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
                 onClick={() => setAudioEnabled(!audioEnabled)}
                 style={{
                   ...controlButtonStyle,
-                  opacity: isDemoSessionExpired ? 0.5 : 1,
-                  cursor: isDemoSessionExpired ? 'not-allowed' : 'pointer'
+                          backgroundColor: audioEnabled ? brandConfig.colors.successGreen : 'rgba(0, 0, 0, 0.5)',
                 }}
-                disabled={isDemoSessionExpired}
-                title={isDemoSessionExpired 
-                  ? 'Demo session expired' 
-                  : audioEnabled 
-                    ? 'Disable audio'
-                    : 'Enable audio'
-                }
+                        title={audioEnabled ? 'Mute audio' : 'Enable audio'}
               >
-                {audioEnabled ? 
-                  <Volume2 style={{ width: '20px', height: '20px' }} /> : 
+                        {audioEnabled ? (
+                          <Volume2 style={{ width: '20px', height: '20px' }} />
+                        ) : (
                   <VolumeX style={{ width: '20px', height: '20px' }} />
-                }
+                        )}
               </button>
+                      
               <button
                 onClick={toggleFullscreen}
-                style={{
-                  ...controlButtonStyle,
-                  opacity: isDemoSessionExpired ? 0.5 : 1,
-                  cursor: isDemoSessionExpired ? 'not-allowed' : 'pointer'
-                }}
+                        style={controlButtonStyle}
                 disabled={isDemoSessionExpired}
                 title={isDemoSessionExpired 
                   ? 'Demo session expired' 
@@ -603,7 +691,7 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
                 top: brandConfig.spacing.md,
                 right: brandConfig.spacing.md,
                 padding: `${brandConfig.spacing.xs} ${brandConfig.spacing.sm}`,
-                backgroundColor: 'rgba(255, 215, 0, 0.9)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
                 color: brandConfig.colors.midnightBlack,
                 borderRadius: brandConfig.layout.borderRadius,
                 fontSize: brandConfig.typography.fontSizeXs,
@@ -719,6 +807,34 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
                 </div>
               )}
             </div>
+
+                    {/* 🎬 AI MONITORING STATUS INDICATOR */}
+                    {userEmail === 'demo@onebarnai.com' && aiMonitoringActive && (
+                      <div style={{
+                        position: 'absolute',
+                        bottom: brandConfig.spacing.md,
+                        right: fullscreen ? '100px' : '150px',
+                        padding: `${brandConfig.spacing.xs} ${brandConfig.spacing.sm}`,
+                        backgroundColor: brandConfig.colors.successGreen,
+                        color: brandConfig.colors.barnWhite,
+                        borderRadius: brandConfig.layout.borderRadius,
+                        fontSize: brandConfig.typography.fontSizeXs,
+                        fontWeight: brandConfig.typography.weightBold,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: brandConfig.spacing.xs,
+                        zIndex: 10,
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                      }}>
+                        <span>🤖</span>
+                        <span>AI MONITORING ACTIVE</span>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
           </div>
         ) : (
           <div 
@@ -746,34 +862,9 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
         )}
       </div>
 
-      {/* Fullscreen Hover Hint */}
-      {fullscreen && !showCameraOverlay && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: '10px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            padding: `${brandConfig.spacing.xs} ${brandConfig.spacing.sm}`,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            color: brandConfig.colors.barnWhite,
-            borderRadius: brandConfig.layout.borderRadius,
-            fontSize: brandConfig.typography.fontSizeXs,
-            opacity: 0.7,
-            transition: 'opacity 0.3s ease',
-            pointerEvents: 'none',
-            zIndex: 9999,
-          }}
-        >
-          Move mouse to bottom for camera selection
-        </div>
-      )}
-
       {/* Camera Grid - Always visible in normal view, overlay in fullscreen */}
       {(!fullscreen || showCameraOverlay) && (
-        <div 
-          style={cameraGridStyle}
-        >
+          <div style={cameraGridStyle}>
         {/* Camera Scroll Area */}
         <div style={cameraScrollStyle}>
           {cameras.map(camera => {
@@ -800,97 +891,77 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
                           });
                         }
                       }}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                      }}
+                          style={videoStyle}
                       autoPlay
                       muted
                       playsInline
-                    >
-                      {!isDemoCamera && camera.url && (
-                        <source src={camera.url} type="video/mp4" />
-                      )}
-                    </video>
+                          controls={false}
+                          onLoadedMetadata={() => {
+                            setStreamStatus(prev => ({ ...prev, [camera.id]: 'active' }));
+                          }}
+                          onError={(e) => {
+                            console.error('[LiveVideoGrid] Thumbnail video error:', e);
+                            setStreamStatus(prev => ({ ...prev, [camera.id]: 'error' }));
+                          }}
+                        />
                   );
                 })()}
                 
-                {/* Status Indicator */}
-                <div 
-                  style={{
+                    {/* Camera Status Indicator */}
+                    <div style={{
                     position: 'absolute',
                     top: brandConfig.spacing.xs,
                     right: brandConfig.spacing.xs,
-                    width: '8px',
-                    height: '8px',
+                      width: '12px',
+                      height: '12px',
                     borderRadius: '50%',
-                    backgroundColor: camera.status === 'online' 
-                      ? brandConfig.colors.successGreen 
-                      : brandConfig.colors.errorRed,
-                  }}
-                />
+                      backgroundColor: 
+                        camera.status === 'online' ? brandConfig.colors.successGreen :
+                        camera.status === 'offline' ? brandConfig.colors.errorRed :
+                        brandConfig.colors.alertAmber,
+                      border: `2px solid ${brandConfig.colors.barnWhite}`,
+                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                    }} />
+
+                    {/* Camera Name */}
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      padding: brandConfig.spacing.xs,
+                      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                      color: brandConfig.colors.barnWhite,
+                      fontSize: brandConfig.typography.fontSizeXs,
+                      fontFamily: brandConfig.typography.fontPrimary,
+                      fontWeight: brandConfig.typography.weightSemiBold,
+                      textAlign: 'center',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                    }}>
+                      {camera.name}
+                    </div>
 
                 {/* Alert Badge */}
                 {hasAlerts && (
-                  <div 
-                    style={{
+                      <div style={{
                       position: 'absolute',
                       top: brandConfig.spacing.xs,
                       left: brandConfig.spacing.xs,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '2px',
-                      padding: '2px 6px',
-                      backgroundColor: criticalAlerts > 0 
-                        ? brandConfig.colors.errorRed 
-                        : brandConfig.colors.alertAmber,
+                        backgroundColor: criticalAlerts > 0 ? brandConfig.colors.errorRed : brandConfig.colors.alertAmber,
                       color: brandConfig.colors.barnWhite,
                       borderRadius: '12px',
-                      fontSize: brandConfig.typography.fontSizeXs,
+                        padding: `2px ${brandConfig.spacing.xs}`,
+                        fontSize: '10px',
                       fontWeight: brandConfig.typography.weightBold,
-                    }}
-                  >
-                    {criticalAlerts > 0 ? (
-                      <AlertTriangle style={{ width: '12px', height: '12px' }} />
-                    ) : (
-                      <Activity style={{ width: '12px', height: '12px' }} />
-                    )}
-                    <span>{cameraAlerts.length}</span>
+                        minWidth: '20px',
+                        textAlign: 'center',
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                      }}>
+                        {cameraAlerts.length}
                   </div>
                 )}
-
-                {/* Camera Info Overlay */}
-                <div 
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    padding: brandConfig.spacing.xs,
-                    background: 'linear-gradient(transparent, rgba(0, 0, 0, 0.7))',
-                    color: brandConfig.colors.barnWhite,
-                  }}
-                >
-                  <div 
-                    style={{
-                      fontFamily: brandConfig.typography.fontPrimary,
-                      fontWeight: brandConfig.typography.weightSemiBold,
-                      fontSize: brandConfig.typography.fontSizeXs,
-                    }}
-                  >
-                    {connectedCameras.has(camera.id) ? 'Your Camera' : camera.name}
-                  </div>
-                  <div 
-                    style={{
-                      fontFamily: brandConfig.typography.fontPrimary,
-                      fontSize: brandConfig.typography.fontSizeXs,
-                      opacity: 0.8,
-                    }}
-                  >
-                    {camera.horses?.length || 0} horse{camera.horses?.length !== 1 ? 's' : ''}
-                  </div>
-                </div>
               </div>
             );
           })}
@@ -929,6 +1000,120 @@ export const LiveVideoGrid: React.FC<LiveVideoGridProps> = ({
             </button>
           </div>
         </div>
+          </div>
+        )}
+      </div>
+
+      {/* 🤖 AI MONITORING SIDE PANEL - Non-intrusive background monitoring */}
+      {userEmail === 'demo@onebarnai.com' && showAIPanel && !fullscreen && (
+        <div style={aiPanelStyle}>
+          <div style={aiPanelHeaderStyle}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: brandConfig.spacing.sm,
+            }}>
+              <span style={{ fontSize: '20px' }}>🤖</span>
+              <div>
+                <div style={{
+                  fontSize: brandConfig.typography.fontSizeSm,
+                  fontWeight: brandConfig.typography.weightBold,
+                  color: brandConfig.colors.stableMahogany,
+                  marginBottom: '2px',
+                }}>
+                  AI Monitor
+                </div>
+                                 <div style={{
+                   fontSize: brandConfig.typography.fontSizeXs,
+                   color: brandConfig.colors.neutralGray,
+                 }}>
+                   Background Analysis
+                 </div>
+               </div>
+             </div>
+             <button
+               onClick={() => setShowAIPanel(false)}
+               style={{
+                 background: 'none',
+                 border: 'none',
+                 fontSize: brandConfig.typography.fontSizeLg,
+                 cursor: 'pointer',
+                 color: brandConfig.colors.neutralGray,
+                padding: '0',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              title="Hide AI Panel (monitoring continues)"
+            >
+              ×
+            </button>
+          </div>
+          
+          <div style={aiPanelContentStyle}>
+            <div style={{
+              padding: brandConfig.spacing.sm,
+              backgroundColor: brandConfig.colors.successGreen,
+              color: brandConfig.colors.barnWhite,
+              borderRadius: brandConfig.layout.borderRadius,
+              textAlign: 'center',
+              fontSize: brandConfig.typography.fontSizeSm,
+              fontWeight: brandConfig.typography.weightBold,
+              marginBottom: brandConfig.spacing.md,
+            }}>
+              🎬 AI Monitoring Active
+            </div>
+            
+            <ScheduledAIMonitor 
+              videoRef={aiVideoRef}
+              isStreamActive={connectedCameras.has(selectedCamera)}
+              onAnalysisComplete={(analysis) => {
+                console.log('🤖 [LiveVideoGrid] AI Analysis Complete:', analysis);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 🤖 HIDDEN VIDEO ELEMENT FOR AI MONITORING */}
+      <video
+        ref={aiVideoRef}
+        style={{
+          position: 'absolute',
+          top: '-9999px',
+          left: '-9999px',
+          width: '1px',
+          height: '1px',
+          opacity: 0,
+          pointerEvents: 'none',
+        }}
+        muted
+        autoPlay
+        playsInline
+      />
+
+      {/* Fullscreen Hover Hint */}
+      {fullscreen && !showCameraOverlay && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '10px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            padding: `${brandConfig.spacing.xs} ${brandConfig.spacing.sm}`,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            color: brandConfig.colors.barnWhite,
+            borderRadius: brandConfig.layout.borderRadius,
+            fontSize: brandConfig.typography.fontSizeXs,
+            opacity: 0.7,
+            transition: 'opacity 0.3s ease',
+            pointerEvents: 'none',
+            zIndex: 9999,
+          }}
+        >
+          Move mouse to bottom for camera selection
       </div>
       )}
     </div>

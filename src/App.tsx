@@ -32,6 +32,10 @@ import RegisterPayment from './pages/registration/RegisterPayment';
 import RegisterConfirmation from './pages/registration/RegisterConfirmation';
 import { Home } from './pages/Home';
 import { Features } from './pages/Features';
+import { About } from './pages/About';
+import { Contact } from './pages/Contact';
+import './App.css';
+import './styles/animated-logo.css';
 
 // Create theme based on brandConfig
 const theme = createTheme({
@@ -138,6 +142,8 @@ const NavigationBridge: React.FC<{ children: React.ReactNode }> = ({ children })
       'login': '/login',
       'register': '/register',
       'features': '/features',
+      'about': '/about',
+      'contact': '/contact',
       'smart-dashboard': '/dashboard',
       'client-dashboard': '/dashboard',
       'employee-dashboard': '/dashboard',
@@ -179,6 +185,8 @@ function App() {
                       <Route path="/login" element={<Login />} />
                       <Route path="/home" element={<Home />} />
                       <Route path="/features" element={<Features />} />
+                      <Route path="/about" element={<About />} />
+                      <Route path="/contact" element={<Contact />} />
                       
                       {/* Registration Flow - Fully Functional */}
                       <Route path="/register" element={<RegistrationLanding />} />

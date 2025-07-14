@@ -5,6 +5,7 @@ import { Activity, Brain, Zap } from 'lucide-react';
 import { brandConfig } from '../../config/brandConfig';
 import { IHeroSection, IAIStatusSection, IPrimaryAction } from '../../interfaces/HomePageTypes';
 import { useNavigation } from '../../contexts/NavigationContext';
+import { AnimatedLogo } from '../common/AnimatedLogo';
 import type { AppRoute } from '../../types/routes';
 
 interface HeroSectionProps {
@@ -172,8 +173,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </Box>
 
         {/* Main Hero Content */}
-        <Typography
-          component={motion.h1}
+        <Box
+          component={motion.div}
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ 
@@ -181,20 +182,19 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             duration: brandConfig.animations.durations.slow 
           }}
           sx={{
-            fontSize: { 
-              xs: brandConfig.typography.fontSize4xl, 
-              md: brandConfig.typography.fontSizeDisplay, 
-              lg: brandConfig.typography.fontSizeDisplayLg 
-            },
-            fontWeight: brandConfig.typography.weightBold,
-            color: brandConfig.colors.arenaSand,
             mb: 3,
-            letterSpacing: '-0.02em',
-            lineHeight: brandConfig.typography.lineHeightTight,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
           }}
         >
-          {hero.title}
-        </Typography>
+          <AnimatedLogo
+            variant="hero"
+            theme="dark"
+            autoPlay={true}
+            delay={0.8}
+          />
+        </Box>
 
         <Typography
           component={motion.h2}

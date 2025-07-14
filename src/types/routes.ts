@@ -3,6 +3,8 @@ export type AppRoute =
   | 'login' 
   | 'register'
   | 'features'
+  | 'about'
+  | 'contact'
   | 'register-owner'
   | 'register-horses'
   | 'register-facility'

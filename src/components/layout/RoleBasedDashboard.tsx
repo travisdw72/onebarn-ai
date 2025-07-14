@@ -59,6 +59,18 @@ export const RoleBasedDashboard: React.FC<RoleBasedDashboardProps> = ({ classNam
     error: dataError,
     refetch 
   } = useDashboardData();
+  
+  console.log('🔍 [RoleBasedDashboard] COMPONENT RENDERED');
+  console.log('🔍 [RoleBasedDashboard] User:', user);
+  console.log('🔍 [RoleBasedDashboard] User Email:', user?.email);
+  console.log('🔍 [RoleBasedDashboard] User Role:', user?.role);
+  console.log('🔍 [RoleBasedDashboard] TenantId:', tenantId);
+  console.log('🔍 [RoleBasedDashboard] Horses:', horses);
+  console.log('🔍 [RoleBasedDashboard] Cameras:', cameras);
+  console.log('🔍 [RoleBasedDashboard] Insights:', insights);
+  console.log('🔍 [RoleBasedDashboard] Alerts:', alerts);
+  console.log('🔍 [RoleBasedDashboard] DataLoading:', dataLoading);
+  console.log('🔍 [RoleBasedDashboard] DataError:', dataError);
 
   const [selectedCamera, setSelectedCamera] = useState<string | null>(null);
   const [isChatExpanded, setIsChatExpanded] = useState(false);
@@ -71,6 +83,10 @@ export const RoleBasedDashboard: React.FC<RoleBasedDashboardProps> = ({ classNam
     alerts: { active: 2 },
     uptime: '99.9%'
   });
+  
+  console.log('🔍 [RoleBasedDashboard] Current activeTab:', activeTab);
+  console.log('🔍 [RoleBasedDashboard] selectedCamera:', selectedCamera);
+  console.log('🔍 [RoleBasedDashboard] systemStatus:', systemStatus);
 
 
 
